@@ -2,11 +2,12 @@
 Used to show graphic interface.
 '''
 import pygame
-from typing import TypeVar
+from typing import TypeVar, List, Tuple
 from math import hypot  # Using this for euclidean distance
 import time  # Using this to control the interface speed
 
 TSquare = TypeVar("TSquare", bound="Square")
+TCoordinate = Tuple[int, int]
 
 WHITE_COLOUR, ORANGE_COLOUR = (255, 255, 255), (255, 165, 0)
 GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
@@ -80,35 +81,58 @@ class Board():
             openSet.append(start.get_coordinates())
             cameFrom = {}
 
+            openSet, closedSet = self.search_in_open_set(
+                openSet, closedSet, goal)
+            while(openSet is not None and
+                    openSet[0] != goal.get_coordinates()):
+                openSet, closedSet = self.search_in_open_set(
+                    openSet, closedSet, goal)
+
+            if openSet is None:
+                return False
+            else:
+                return True
+
+        def search_in_open_set(
+                self,
+                open_set: List[TCoordinate],
+                closed_set: List[TCoordinate],
+                goal: TSquare
+                ) -> (List[TCoordinate], List[TCoordinate]):
+            ''' Iterates trough the open set lists of coordinates and
+            verify if they're the end, put those who are not good in
+            the closed_set and the good ones in open_set and returns then
+            as tuple(open_set, closed_set)
+            '''
             choosen_index = 0
-            for i, _ in enumerate(openSet):
-                choosen_square = self.get_square_at(openSet[choosen_index])
-                temp_square = self.get_square_at(openSet[i])
+            for i, _ in enumerate(open_set.copy()):
+                choosen_square = self.get_square_at(open_set[choosen_index])
+                temp_square = self.get_square_at(open_set[i])
 
                 if temp_square.f < choosen_square.f:
                     choosen_index = i
 
-                if openSet[choosen_index] == goal.get_coordinates():
+                if open_set[choosen_index] == goal.get_coordinates():
                     return True
 
-                current_coordinate = openSet[choosen_index]
+                current_coordinate = open_set[choosen_index]
                 current_square = self.get_square_at(current_coordinate)
 
-                openSet.pop(choosen_index)
-                closedSet.append(current_coordinate)
+                open_set.pop(choosen_index)
+                closed_set.append(current_coordinate)
 
                 for neighbour_coordinate in current_square.neighbours:
-                    if neighbour_coordinate in closedSet:
+                    if neighbour_coordinate in closed_set:
                         continue
 
                     neighbour_square = self.get_square_at(neighbour_coordinate)
                     tentative_g_score = current_square.g + 1
-                    if neighbour_coordinate in openSet:
+                    if neighbour_coordinate in open_set:
                         if tentative_g_score < neighbour_square.g:
-                            neighbour_square.g_score = tentative_g_score
+                            neighbour_square.g = tentative_g_score
                     else:
                         neighbour_square.g = tentative_g_score
-                        openSet.append(neighbour_coordinate)
+                        open_set.append(neighbour_coordinate)
 
                     neighbour_square.h = self.euclidean_distance(
                         neighbour_coordinate, goal.get_coordinates())
@@ -116,11 +140,11 @@ class Board():
                         + neighbour_square.g
                     neighbour_square.previous_square = current_square
 
-                    for square_coordinate in openSet:
+                    for square_coordinate in open_set:
                         # painting all open set squares
                         square = self.get_square_at(square_coordinate)
                         square.set_colour(DARKSEAGREEN_COLOUR)
-                    for square_coordinate in closedSet:
+                    for square_coordinate in closed_set:
                         # painting all closed set squares
                         square = self.get_square_at(square_coordinate)
                         square.set_colour(GREENYELLOW_COLOUR)
@@ -130,15 +154,15 @@ class Board():
                         current_square = current_square.previous_square
                     self.show()
                     time.sleep(0.5)
-            return False
+            return (open_set, closed_set)
 
         def euclidean_distance(
                 self,
                 start_coordinate: (int, int),
                 goal_coordinate: (int, int)) -> int:
-            return hypot(
-                goal_coordinate[0] - start_coordinate[0],
-                goal_coordinate[1] - start_coordinate[0])
+            return (
+                (goal_coordinate[0] - start_coordinate[0])**2 +
+                (goal_coordinate[1] - start_coordinate[0])**2) ** (1/2)
 
     instance = None
 
@@ -186,9 +210,8 @@ class Square():
 pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
-board.set_end(BOARD_DIMENSION-1, BOARD_DIMENSION-1)
-board.show()
-print( board.a_start_pathfinding(board.start_square, board.end_square))
+board.set_end(4, 0)
+print(board.a_start_pathfinding(board.start_square, board.end_square))
 board.show()
 
 pygame.quit()
