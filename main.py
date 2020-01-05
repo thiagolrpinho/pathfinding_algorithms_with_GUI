@@ -3,13 +3,14 @@ Used to show graphic interface.
 '''
 import pygame
 from typing import TypeVar
-from math import hypot # Using this for euclidean distance
+from math import hypot  # Using this for euclidean distance
+import time  # Using this to control the interface speed
 
 TSquare = TypeVar("TSquare", bound="Square")
 
 WHITE_COLOUR, ORANGE_COLOUR = (255, 255, 255), (255, 165, 0)
 GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
-DARKSEAGREEN_COLOUR = (143, 188, 143)
+DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 CANVAS_DIMENSION = 400
 BOARD_DIMENSION = 5
@@ -73,42 +74,54 @@ class Board():
             the heuristic function choosen. It paints the
             board square black for the path choosen. Returns
             True if able to find solution and False if not '''
-            choosen_key = start.get_coordinates()
-            openSet = {}
-            closedSet = {}
-            openSet[choosen_key] = start
+            openSet = []
+            closedSet = []
+            openSet.append(start)
             cameFrom = {}
 
-            for square in openSet.values():
-                print(square)
-                square.set_colour(GREENYELLOW_COLOUR)
-            for square in closedSet.values():
-                square.set_colour(DARKSEAGREEN_COLOUR)
-            self.show()
+            choosen_key = 0
+            for i, _ in enumerate(openSet):
 
-            for key in openSet.keys():
-                if openSet[key].f < openSet[choosen_key].f:
-                    choosen_key = key
+                if openSet[i].f < openSet[choosen_key].f:
+                    choosen_key = i
 
-                if openSet[choosen_key] == goal:
+                if openSet[choosen_key].get_coordinates()\
+                        == goal.get_coordinates():
                     return True
-                
-                closedSet[choosen_key] = openSet.pop(choosen_key)
-                for neighbour in closedSet[choosen_key].neighbours:
+
+                current_square = openSet.pop(choosen_key)
+                closedSet.append(current_square)
+                for neighbour in current_square.neighbours:
                     if neighbour.get_coordinates in closedSet:
                         continue
-                    tentative_g_score = closedSet[choosen_key].g + 1
-                    if neighbour.get_coordinates in openSet:
+                    tentative_g_score = current_square.g + 1
+                    if neighbour in openSet:
                         if tentative_g_score < neighbour.g:
                             neighbour.g_score = tentative_g_score
                     else:
                         neighbour.g = tentative_g_score
-                        openSet[neighbour.get_coordinates()] = neighbour
+                        openSet.append(neighbour)
 
                     neighbour.h = self.euclidean_distance(
                         neighbour.get_coordinates(), goal.get_coordinates())
                     neighbour.f = neighbour.h\
                         + neighbour.g
+                    neighbour.previous_square = current_square
+
+                    for square in openSet:
+                        # painting all open set squares
+                        square.set_colour(DARKSEAGREEN_COLOUR)
+                    for square in closedSet:
+                        # painting all closed set squares
+                        square.set_colour(GREENYELLOW_COLOUR)
+                    # painting all path squares
+                    while(current_square.previous_square):
+                        current_square.set_colour(DARKGREEN_COLOUR)
+                        current_square = current_square.previous_square
+                    
+                    self.show()
+                    time.sleep(0.5)
+            return False
 
         def euclidean_distance(
                 self,
@@ -140,6 +153,7 @@ class Square():
     def __init__(self, pygame, y_coordinate: int, x_coordinate: int) -> None:
         self.pygame = pygame
         self.neighbours = []
+        self.previous_square = None
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
         self.colour = WHITE_COLOUR
@@ -169,7 +183,7 @@ board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
 board.set_end(BOARD_DIMENSION-1, BOARD_DIMENSION-1)
 board.show()
-board.a_start_pathfinding(board.start_square, board.end_square)
+print( board.a_start_pathfinding(board.start_square, board.end_square))
 board.show()
 
 pygame.quit()
