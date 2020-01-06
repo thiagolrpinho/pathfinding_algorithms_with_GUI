@@ -13,7 +13,7 @@ GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 CANVAS_DIMENSION = 400
-BOARD_DIMENSION = 30
+BOARD_DIMENSION = 50
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 
 pygame.init()
@@ -78,10 +78,10 @@ class Board():
             open_list.append(start)
             while(open_list):
                 ''' while the open list is not empty '''
-                open_list.sort(key=lambda x: x.f)
+                open_list.sort(key=lambda x: x.f, reverse=True)
                 '''find the node with the least f on
                 the open list, call it "q" '''
-                q_node = open_list.pop(0)
+                q_node = open_list.pop()
                 ''' pop q off the open list '''
                 for neighbour in q_node.neighbours:
                     ''' Generate sucessors and set their
@@ -94,14 +94,13 @@ class Board():
                     if neighbour in closed_list:
                         continue
                     neighbour.add_parent(q_node)
-                    temp_g = q_node.g\
-                        + self.distance_between(neighbour, q_node)
+                    temp_g = q_node.g + 1
                     if neighbour in open_list:
                         neighbour_index = open_list.index(neighbour)
-                        if temp_g < open_list[neighbour_index].g:
+                        if temp_g > open_list[neighbour_index].g:
                             continue
                     neighbour.g = temp_g
-                    neighbour.h = self.euclidean_distance(
+                    neighbour.h = self.manhattan_distance(
                         neighbour.get_coordinates(), goal.get_coordinates())
                     neighbour.f = neighbour.g + neighbour.h
                     open_list.append(neighbour)
@@ -111,9 +110,9 @@ class Board():
                                 square.set_colour(GREENYELLOW_COLOUR)
                             elif square in closed_list:
                                 square.set_colour(DARKSEAGREEN_COLOUR)
-                    
+
                     self.show()
-                    sleep(0.025)
+                    sleep(0.05)
                 closed_list.append(q_node)
             return False
 
@@ -128,7 +127,16 @@ class Board():
             euclidean distance'''
             return (
                 (goal_coordinate[0] - start_coordinate[0])**2 +
-                (goal_coordinate[1] - start_coordinate[0])**2) ** (1/2)
+                (goal_coordinate[1] - start_coordinate[1])**2) ** (1/2)
+
+        def manhattan_distance(
+                self,
+                start_coordinate: (int, int),
+                goal_coordinate: (int, int)) -> int:
+            ''' Receives two coordinates (y, x) and return their manhattan
+            distance '''
+            return abs(goal_coordinate[0] - start_coordinate[0])\
+                + abs(goal_coordinate[1] - start_coordinate[1])
 
         def distance_between(
                 self, first_node: TSquare, second_node: TSquare) -> int:
@@ -188,13 +196,12 @@ class Square():
 pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
-board.set_end( 3, BOARD_DIMENSION-4)
+board.set_end(BOARD_DIMENSION-2, BOARD_DIMENSION-2)
 was_pathfound = board.a_star_pathfind(board.start_square, board.end_square)
 if was_pathfound:
     path_square = board.end_square
     while(path_square):
         path_square.set_colour(DARKGREEN_COLOUR)
-        print(path_square.get_coordinates())
         path_square = path_square.parent_square
         sleep(0.1)
         board.show()
