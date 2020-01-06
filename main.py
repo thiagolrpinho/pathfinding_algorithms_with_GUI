@@ -2,9 +2,7 @@
 Used to show graphic interface.
 '''
 import pygame
-from typing import TypeVar, List, Tuple
-from math import hypot  # Using this for euclidean distance
-import time  # Using this to control the interface speed
+from typing import TypeVar, Tuple
 
 TSquare = TypeVar("TSquare", bound="Square")
 TCoordinate = Tuple[int, int]
@@ -64,106 +62,66 @@ class Board():
                         lambda x: x < 0 or x >= BOARD_DIMENSION,
                         possible_coordinate)) == 0
 
+        def a_star_pathfind(self, start: TSquare, goal: TSquare):
+            ''' Following VibhakarMohta instructions available in geelsforgeeks
+                Initialize the open list
+                Initialize the closed list
+                put the starting node on the open
+                list
+            '''
+            open_list = []
+            closed_list = []
+
+            open_list.append(start)
+            while(open_list):
+                ''' while the open list is not empty '''
+                open_list.sort(key=lambda x: x.f)
+                '''find the node with the least f on
+                the open list, call it "q" '''
+                q_node = open_list.pop(0)
+                ''' pop q off the open list '''
+                for neighbour_coordinate in q_node.neighbours:
+                    ''' Generate sucessors and set their
+                        parents to q '''
+                    if neighbour_coordinate == goal.get_coordinates():
+                        ''' if successor is the goal, stop search '''
+                        return True
+                    neighbour = self.get_square_at(neighbour_coordinate)
+                    if neighbour in closed_list:
+                        continue
+                    neighbour.add_parent(q_node)
+                    temp_g = q_node.g\
+                        + self.distance_between(neighbour, q_node)
+                    if neighbour in open_list:
+                        neighbour_index = open_list.index(neighbour)
+                        if temp_g < open_list[neighbour_index].g:
+                            continue
+                    neighbour.g = temp_g
+                    neighbour.h = self.euclidean_distance(
+                        neighbour.get_coordinates(), goal.get_coordinates())
+                    neighbour.f = neighbour.g + neighbour.h
+                    open_list.append(neighbour)
+            return False
+
         def get_square_at(self, coordinate: (int, int)) -> TSquare:
             return self.grid[coordinate[0]][coordinate[1]]
-
-        def a_start_pathfinding(
-                self,
-                start: TSquare,
-                goal: TSquare,
-                heuristic_function: str = 'euclidean_dist') -> bool:
-            ''' Finds the best path fron start to goal using
-            the heuristic function choosen. It paints the
-            board square black for the path choosen. Returns
-            True if able to find solution and False if not '''
-            openSet = []
-            closedSet = []
-            openSet.append(start.get_coordinates())
-            cameFrom = {}
-
-            openSet, closedSet = self.search_in_open_set(
-                openSet, closedSet, goal)
-            while(openSet is not None and
-                    openSet[0] != goal.get_coordinates()):
-                openSet, closedSet = self.search_in_open_set(
-                    openSet, closedSet, goal)
-
-            if openSet is None:
-                return False
-            else:
-                return True
-
-        def search_in_open_set(
-                self,
-                open_set: List[TCoordinate],
-                closed_set: List[TCoordinate],
-                goal: TSquare
-                ) -> (List[TCoordinate], List[TCoordinate]):
-            ''' Iterates trough the open set lists of coordinates and
-            verify if they're the end, put those who are not good in
-            the closed_set and the good ones in open_set and returns then
-            as tuple(open_set, closed_set)
-            '''
-            choosen_index = 0
-            for i, _ in enumerate(open_set.copy()):
-                choosen_square = self.get_square_at(open_set[choosen_index])
-                temp_square = self.get_square_at(open_set[i])
-
-                if temp_square.f < choosen_square.f:
-                    choosen_index = i
-
-                if open_set[choosen_index] == goal.get_coordinates():
-                    return True
-
-                current_coordinate = open_set[choosen_index]
-                current_square = self.get_square_at(current_coordinate)
-
-                open_set.pop(choosen_index)
-                closed_set.append(current_coordinate)
-
-                for neighbour_coordinate in current_square.neighbours:
-                    if neighbour_coordinate in closed_set:
-                        continue
-
-                    neighbour_square = self.get_square_at(neighbour_coordinate)
-                    tentative_g_score = current_square.g + 1
-                    if neighbour_coordinate in open_set:
-                        if tentative_g_score < neighbour_square.g:
-                            neighbour_square.g = tentative_g_score
-                    else:
-                        neighbour_square.g = tentative_g_score
-                        open_set.append(neighbour_coordinate)
-
-                    neighbour_square.h = self.euclidean_distance(
-                        neighbour_coordinate, goal.get_coordinates())
-                    neighbour_square.f = neighbour_square.h\
-                        + neighbour_square.g
-                    neighbour_square.previous_square = current_square
-
-                    for square_coordinate in open_set:
-                        # painting all open set squares
-                        square = self.get_square_at(square_coordinate)
-                        square.set_colour(DARKSEAGREEN_COLOUR)
-                    for square_coordinate in closed_set:
-                        # painting all closed set squares
-                        square = self.get_square_at(square_coordinate)
-                        square.set_colour(GREENYELLOW_COLOUR)
-                    # painting all path squares
-                    while(current_square.previous_square):
-                        current_square.set_colour(DARKGREEN_COLOUR)
-                        current_square = current_square.previous_square
-                    self.show()
-                    time.sleep(0.5)
-            return (open_set, closed_set)
 
         def euclidean_distance(
                 self,
                 start_coordinate: (int, int),
                 goal_coordinate: (int, int)) -> int:
+            ''' Receives two coordinates (y, x) and return their distance using
+            euclidean distance'''
             return (
                 (goal_coordinate[0] - start_coordinate[0])**2 +
                 (goal_coordinate[1] - start_coordinate[0])**2) ** (1/2)
 
+        def distance_between(
+                self, first_node: TSquare, second_node: TSquare) -> int:
+            ''' Receives two nodes and return their distance using
+            euclidean distance'''
+            return self.euclidean_distance(
+                first_node.get_coordinates(), second_node.get_coordinates())
     instance = None
 
     def __init__(self, pygame, dimension: int) -> None:
@@ -176,14 +134,14 @@ class Board():
 
 
 class Square():
-    ''' Encapsules the boards squares. 
+    ''' Encapsules the boards squares.
     Have X and Y coordinates, it's neibourghs
     and some attributes
     '''
     def __init__(self, pygame, y_coordinate: int, x_coordinate: int) -> None:
         self.pygame = pygame
         self.neighbours = []
-        self.previous_square = None
+        self.parent_square = None
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
         self.colour = WHITE_COLOUR
@@ -204,14 +162,18 @@ class Square():
     def get_coordinates(self) -> (int, int):
         return (self.y_coordinate, self.x_coordinate)
 
-    def add_neighbour(self, neighbour_coordinate: TSquare) -> None:
+    def add_neighbour(self, neighbour_coordinate: (int, int)) -> None:
         self.neighbours.append(neighbour_coordinate)
+
+    def add_parent(self, parent_square: TSquare) -> None:
+        self.parent_square = parent_square
+
 
 pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
-board.set_end(4, 0)
-print(board.a_start_pathfinding(board.start_square, board.end_square))
+board.set_end(4, 4)
+print(board.a_star_pathfind(board.start_square, board.end_square))
 board.show()
 
 pygame.quit()
