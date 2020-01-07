@@ -17,6 +17,7 @@ class Square():
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
         self.colour = WHITE_COLOUR
+        self.traversable = True
 
     def show(self) -> None:
         ''' Draws the square on the board with a little border'''
@@ -41,3 +42,8 @@ class Square():
 
     def add_parent(self, parent_square: TSquare) -> None:
         self.parent_square = parent_square
+
+    def set_obstacle(self, is_obstacle: bool) -> None:
+        self.traversable = not is_obstacle
+        if not self.traversable:
+            self.set_colour((0, 0, 0))

@@ -12,7 +12,7 @@ pygame.init()
 
 pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
-board.set_start(2, 5)
+board.set_start(0, 0)
 board.set_end(BOARD_DIMENSION-2, BOARD_DIMENSION-2)
 was_pathfound = board.a_star_pathfind(board.start_square, board.end_square)
 if was_pathfound:

@@ -3,6 +3,7 @@ import pygame
 from gui_helper import BOARD_DIMENSION, POWDERBLUE_COLOUR,\
     ORANGE_COLOUR, GREENYELLOW_COLOUR, DARKSEAGREEN_COLOUR, TIME_TICK
 from time import sleep
+import random
 
 
 class Board():
@@ -18,6 +19,8 @@ class Board():
                     for x in range(weight)]
                 for y in range(height)]
             self.add_adjacent_neighbours()
+            self.add_diagonal_neighbours()
+            self.set_random_obstacles(0.3)
 
         def show(self):
             ''' Prints all board squares on canvas '''
@@ -27,14 +30,19 @@ class Board():
             pygame.display.update()
 
         def set_start(self, y_coordinate: int, x_coordinate: int) -> None:
+            ''' Configure the square at given coordinates as the start square '''
             self.start_square = self.grid[y_coordinate][x_coordinate]
             self.start_square.set_colour(POWDERBLUE_COLOUR)
+            self.start_square.set_obstacle(False)
 
         def set_end(self, y_coordinate: int, x_coordinate: int) -> None:
+            ''' Configure the square at given coordinates as the end square '''
             self.end_square = self.grid[y_coordinate][x_coordinate]
             self.end_square.set_colour(ORANGE_COLOUR)
+            self.end_square.set_obstacle(False)
 
         def add_adjacent_neighbours(self) -> None:
+            ''' Add adjacent neighbours to all squares in grid '''
             for column in self.grid:
                 for square in column:
                     coordinates = square.get_coordinates()
@@ -46,10 +54,30 @@ class Board():
                                 possible_adjacent)
                             square.add_neighbour(neighbour_square)
 
+        def add_diagonal_neighbours(self) -> None:
+            ''' Add diagonal neighbours to all squares in grid '''
+            for column in self.grid:
+                for square in column:
+                    coordinates = square.get_coordinates()
+                    for adjacent_index in [(-1, 1), (1, 1), (1, -1), (-1, 1)]:
+                        possible_adjacent = tuple(
+                            map(lambda x, y: x+y, coordinates, adjacent_index))
+                        if self.is_valid_coordinate(possible_adjacent):
+                            neighbour_square = self.get_square_at(
+                                possible_adjacent)
+                            square.add_neighbour(neighbour_square)
+
+
         def is_valid_coordinate(self, possible_coordinate: (int, int)) -> bool:
             return sum(map(
                         lambda x: x < 0 or x >= BOARD_DIMENSION,
                         possible_coordinate)) == 0
+
+        def set_random_obstacles(self, percentual_chance: int) -> None:
+            for column in self.grid:
+                for square in column:
+                    if random.random() < percentual_chance:
+                        square.set_obstacle(True)
 
         def a_star_pathfind(self, start: TSquare, goal: TSquare):
             ''' Following VibhakarMohta instructions available in geelsforgeeks
@@ -91,15 +119,15 @@ class Board():
                     neighbour.add_parent(q_node)
                     return open_list, True
 
-                if neighbour in closed_list:
+                if neighbour in closed_list or not neighbour.traversable:
                     continue
-                neighbour.add_parent(q_node)
-                temp_g = q_node.g + 1
+                temp_g = q_node.g + self.distance_between(q_node, neighbour)
                 if neighbour in open_list:
                     neighbour_index = open_list.index(neighbour)
                     if temp_g > open_list[neighbour_index].g:
                         continue
                 neighbour.g = temp_g
+                neighbour.add_parent(q_node)
                 neighbour.h = self.manhattan_distance(
                     neighbour.get_coordinates(), goal.get_coordinates())
                 neighbour.f = neighbour.g + neighbour.h
@@ -116,12 +144,18 @@ class Board():
             return open_list, False
 
         def get_square_at(self, coordinate: (int, int)) -> TSquare:
-            return self.grid[coordinate[0]][coordinate[1]]
+            ''' Returns the square available at given coordinate if it exists'''
+            square = None
+            if self.is_valid_coordinate(coordinate):
+                square = self.grid[coordinate[0]][coordinate[1]]
+            else:
+                square = None
+            return square
 
         def euclidean_distance(
                 self,
                 start_coordinate: (int, int),
-                goal_coordinate: (int, int)) -> int:
+                goal_coordinate: (int, int)) -> float:
             ''' Receives two coordinates (y, x) and return their distance using
             euclidean distance'''
             return (
