@@ -10,7 +10,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 600
-BOARD_DIMENSION = 60
+BOARD_DIMENSION = 20
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 
 # Time
@@ -30,22 +30,27 @@ class Square():
         self.parent_square = None
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
-        self.colour = WHITE_COLOUR
+        self.set_colour(WHITE_COLOUR)
         self.traversable = True
 
     def show(self) -> None:
         ''' Draws the square on the board with a little border'''
-        self.pygame.draw.rect(
-            pygame.display.get_surface(),
-            self.colour,
-            self.pygame.Rect(
-                self.x_coordinate*(
-                    SQUARE_SIZE+1),
-                self.y_coordinate*(
-                    SQUARE_SIZE+1),
-                SQUARE_SIZE, SQUARE_SIZE))
+        if self.colour_changed:
+            self.pygame.draw.rect(
+                pygame.display.get_surface(),
+                self.colour,
+                self.pygame.Rect(
+                    self.x_coordinate*(
+                        SQUARE_SIZE+1),
+                    self.y_coordinate*(
+                        SQUARE_SIZE+1),
+                    SQUARE_SIZE, SQUARE_SIZE))
+        colour_changed = False
 
     def set_colour(self, new_colour: (int, int, int)) -> None:
+        ''' Changes the square colour and signalizes it's
+            colour has changed '''
+        self.colour_changed = True
         self.colour = new_colour
 
     def get_coordinates(self) -> (int, int):
@@ -267,6 +272,58 @@ def a_star_search_neighbours(
     show_board(open_list, closed_list)
     return open_list, False
 
+
+def dijkstras_pathfinding(start: TSquare, goal: TSquare):
+    ''' Similar to a star pathfinding but without the 
+        heutistic function '''
+    open_list = []
+    closed_list = []
+
+    open_list.append(start)
+    while(open_list):
+        ''' while the open list is not empty '''
+        open_list.sort(key=lambda x: x.f, reverse=True)
+        '''find the node with the least f on
+        the open list, call it "q" '''
+        q_node = open_list.pop()
+        ''' pop q off the open list '''
+        open_list, found = dijkstras_search_neighbours(
+            q_node, goal, open_list, closed_list)
+        if found is True:
+            return True
+        closed_list.append(q_node)
+    return False
+
+
+def dijkstras_search_neighbours(
+        q_node, goal, open_list, closed_list):
+    ''' Search for selected node neighbours, calculate
+        their distances and add then to open_list. If
+        the end was found return open_list, True
+        else open_list, False '''
+
+    for neighbour in q_node.neighbours:
+        ''' Generate sucessors and set their
+            parents to q '''
+        if neighbour.get_coordinates() == goal.get_coordinates():
+            ''' if successor is the goal, stop search '''
+            neighbour.add_parent(q_node)
+            return open_list, True
+
+        if neighbour in closed_list or not neighbour.traversable:
+            continue
+        temp_g = q_node.g + distance_between(q_node, neighbour)
+        if neighbour in open_list:
+            neighbour_index = open_list.index(neighbour)
+            if temp_g > open_list[neighbour_index].g:
+                continue
+        neighbour.g = temp_g
+        neighbour.add_parent(q_node)
+        neighbour.f = neighbour.g
+        open_list.append(neighbour)
+
+    show_board(open_list, closed_list)
+    return open_list, False
 
 def show_board(open_list, closed_list) -> None:
     ''' Show the board if there's already a board created '''
