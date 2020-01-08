@@ -10,7 +10,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 600
-BOARD_DIMENSION = 20
+BOARD_DIMENSION = 50
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 
 # Time
@@ -274,7 +274,7 @@ def a_star_search_neighbours(
 
 def dijkstras_pathfinding(start: TSquare, goal: TSquare):
     ''' Similar to a star pathfinding but without the
-        heutistic function '''
+        heuristic function '''
     open_set = set()
     closed_set = set()
 
@@ -304,13 +304,61 @@ def dijkstras_pathfinding(start: TSquare, goal: TSquare):
     return False
 
 
+def double_dijkstras_pathfinding(start: TSquare, goal: TSquare):
+    ''' A dijkstra algorithm that starts from both
+        the initial square and the end '''
+    start_open_set = set()
+    goal_open_set = set()
+    closed_set = set()
+
+    start_open_set.add(start)
+    goal_open_set.add(goal)
+
+    while(start_open_set or goal_open_set):
+        ''' while the open list is not empty '''
+        start_time = time()
+        '''find the node with the least f on
+        the open list, call it "q" '''
+        start_q_node = min(start_open_set, key=lambda x: x.f)
+        goal_q_node = min(goal_open_set, key=lambda x: x.f)
+        start_open_set.remove(start_q_node)
+        goal_open_set.remove(goal_q_node)
+        ''' pop q off the open list '''
+
+        goal_open_set, found = dijkstras_search_neighbours(
+            goal_q_node, start, goal_open_set, closed_set)
+        start_open_set, found = dijkstras_search_neighbours(
+            start_q_node, goal, start_open_set, closed_set)
+        ''' We search from both start and goal '''
+        show_board(start_open_set.union(goal_open_set), closed_set)
+
+        if bool(start_open_set.intersection(goal_open_set)) is True:
+            ''' If there's an square that is in the sets from both
+            goal and start, it has found a path. Now they need to
+            connect '''
+            intersection_set = start_open_set.intersection(goal_open_set)
+            last_parent = intersection_set.pop()
+            actual_node = goal_q_node
+            while(actual_node):
+                next_parent = actual_node.parent_square
+                actual_node.parent_square = last_parent
+                last_parent = actual_node
+                actual_node = next_parent
+            return True
+
+        closed_set.add(start_q_node)
+        closed_set.add(goal_q_node)
+        if abs(time() - start_time) > 0.01:
+            print("Full Dijkstra loop: ", time() - start_time)
+    return False
+
+
 def dijkstras_search_neighbours(
         q_node, goal, open_set, closed_set):
     ''' Search for selected node neighbours, calculate
         their distances and add then to open_set. If
         the end was found return open_set, True
         else open_list, False '''
-    start_time = time()
     for neighbour in q_node.neighbours:
         ''' Generate sucessors and set their
             parents to q '''
@@ -330,9 +378,6 @@ def dijkstras_search_neighbours(
         neighbour.f = neighbour.g
         open_set.add(neighbour)
 
-    dijkstras_time = time()
-    if abs(dijkstras_time - start_time) > 0.01:
-        print("Dijkstra neighbour time:", dijkstras_time - start_time)
     return open_set, False
 
 
