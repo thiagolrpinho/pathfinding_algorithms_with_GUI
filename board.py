@@ -4,17 +4,20 @@ from time import sleep
 from typing import TypeVar
 
 # Colours
-WHITE_COLOUR, ORANGE_COLOUR = (255, 255, 255), (255, 165, 0)
+WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
+ORANGE_COLOUR = (255, 165, 0)
 GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 100
+BOARD_DIMENSION = 20
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
+OBSTACLES_RATIO = 0
 
 # Time
-TIME_TICK = 0.00
+TIME_TICK = 0.01
+
 
 TSquare = TypeVar("TSquare", bound="Square")
 
@@ -66,7 +69,7 @@ class Square():
     def set_obstacle(self, is_obstacle: bool) -> None:
         self.traversable = not is_obstacle
         if not self.traversable:
-            self.set_colour((0, 0, 0))
+            self.set_colour(BLACK_COLOUR)
 
 
 class Board():
@@ -83,7 +86,7 @@ class Board():
                 for y in range(height)]
             self.add_adjacent_neighbours()
             self.add_diagonal_neighbours()
-            self.set_random_obstacles(0.3)
+            self.set_random_obstacles(OBSTACLES_RATIO)
 
         def show(self):
             ''' Prints all board squares on canvas '''
@@ -123,7 +126,7 @@ class Board():
             for column in self.grid:
                 for square in column:
                     coordinates = square.get_coordinates()
-                    for adjacent_index in [(-1, 1), (1, 1), (1, -1), (-1, 1)]:
+                    for adjacent_index in [(-1, -1), (1, 1), (1, -1), (-1, 1)]:
                         possible_adjacent = tuple(
                             map(lambda x, y: x+y, coordinates, adjacent_index))
                         if self.is_valid_coordinate(possible_adjacent):
@@ -291,52 +294,6 @@ def dijkstras_pathfinding(start: TSquare, goal: TSquare):
         if found is True:
             return True
         closed_set.add(q_node)
-    return False
-
-
-def double_dijkstras_pathfinding(start: TSquare, goal: TSquare):
-    ''' A dijkstra algorithm that starts from both
-        the initial square and the end '''
-    start_open_set = set()
-    goal_open_set = set()
-    closed_set = set()
-
-    start_open_set.add(start)
-    goal_open_set.add(goal)
-
-    while(start_open_set or goal_open_set):
-        ''' while the open list is not empty '''
-        '''find the node with the least f on
-        the open list, call it "q" '''
-        start_q_node = min(start_open_set, key=lambda x: x.f)
-        goal_q_node = min(goal_open_set, key=lambda x: x.f)
-        start_open_set.remove(start_q_node)
-        goal_open_set.remove(goal_q_node)
-        ''' pop q off the open list '''
-
-        goal_open_set, found = dijkstras_search_neighbours(
-            goal_q_node, start, goal_open_set, closed_set)
-        start_open_set, found = dijkstras_search_neighbours(
-            start_q_node, goal, start_open_set, closed_set)
-        ''' We search from both start and goal '''
-        show_board(start_open_set.union(goal_open_set), closed_set)
-
-        if bool(start_open_set.intersection(goal_open_set)) is True:
-            ''' If there's an square that is in the sets from both
-            goal and start, it has found a path. Now they need to
-            connect '''
-            intersection_set = start_open_set.intersection(goal_open_set)
-            last_parent = intersection_set.pop()
-            actual_node = goal_q_node
-            while(actual_node):
-                next_parent = actual_node.parent_square
-                actual_node.parent_square = last_parent
-                last_parent = actual_node
-                actual_node = next_parent
-            return True
-
-        closed_set.add(start_q_node)
-        closed_set.add(goal_q_node)
     return False
 
 
