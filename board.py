@@ -1,6 +1,6 @@
 import pygame
 import random
-from time import sleep, time
+from time import sleep
 from typing import TypeVar
 
 # Colours
@@ -9,8 +9,8 @@ GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
-CANVAS_DIMENSION = 600
-BOARD_DIMENSION = 50
+CANVAS_DIMENSION = 700
+BOARD_DIMENSION = 100
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 
 # Time
@@ -217,59 +217,57 @@ def distance_between(
 
 def a_star_pathfind(start: TSquare, goal: TSquare):
     ''' Following VibhakarMohta instructions available in geelsforgeeks
-        Initialize the open list
-        Initialize the closed list
-        put the starting node on the open
-        list
+        Initialize the open set
+        Initialize the closed set
+        put the starting node on the open set
     '''
-    open_list = []
-    closed_list = []
+    open_set = set()
+    closed_set = set()
 
-    open_list.append(start)
-    while(open_list):
+    open_set.add(start)
+    while(open_set):
         ''' while the open list is not empty '''
-        open_list.sort(key=lambda x: x.f, reverse=True)
         '''find the node with the least f on
         the open list, call it "q" '''
-        q_node = open_list.pop()
+        q_node = min(open_set, key=lambda x: x.f)
+        open_set.remove(q_node)
         ''' pop q off the open list '''
-        open_list, found = a_star_search_neighbours(
-            q_node, goal, open_list, closed_list)
+        open_set, found = a_star_search_neighbours(
+            q_node, goal, open_set, closed_set)
         if found is True:
             return True
-        closed_list.append(q_node)
+        closed_set.add(q_node)
     return False
 
 
 def a_star_search_neighbours(
-        q_node, goal, open_list, closed_list):
+        q_node, goal, open_set, closed_set):
     ''' Search for selected node neighbours, calculate
-        their distances and add then to open_list. If
-        the end was found return open_list, True
-        else open_list, False '''
+        their distances and add then to open_set. If
+        the end was found return open_set, True
+        else open_set, False '''
     for neighbour in q_node.neighbours:
         ''' Generate sucessors and set their
             parents to q '''
         if neighbour.get_coordinates() == goal.get_coordinates():
             ''' if successor is the goal, stop search '''
             neighbour.add_parent(q_node)
-            return open_list, True
+            return open_set, True
 
-        if neighbour in closed_list or not neighbour.traversable:
+        if neighbour in closed_set or not neighbour.traversable:
             continue
         temp_g = q_node.g + distance_between(q_node, neighbour)
-        if neighbour in open_list:
-            neighbour_index = open_list.index(neighbour)
-            if temp_g > open_list[neighbour_index].g:
+        if neighbour in open_set:
+            if temp_g > neighbour.g:
                 continue
         neighbour.g = temp_g
         neighbour.add_parent(q_node)
         neighbour.h = manhattan_distance(
             neighbour.get_coordinates(), goal.get_coordinates())
         neighbour.f = neighbour.g + neighbour.h
-        open_list.append(neighbour)
-    show_board(open_list, closed_list)
-    return open_list, False
+        open_set.add(neighbour)
+    show_board(open_set, closed_set)
+    return open_set, False
 
 
 def dijkstras_pathfinding(start: TSquare, goal: TSquare):
@@ -281,26 +279,18 @@ def dijkstras_pathfinding(start: TSquare, goal: TSquare):
     open_set.add(start)
     while(open_set):
         ''' while the open list is not empty '''
-        start_time = time()
         '''find the node with the least f on
         the open list, call it "q" '''
         q_node = min(open_set, key=lambda x: x.f)
         open_set.remove(q_node)
         ''' pop q off the open list '''
-        sort_time = time()
-        if abs(sort_time - start_time) > 0.01:
-            print("Sort time: ", sort_time - start_time)
         open_set, found = dijkstras_search_neighbours(
             q_node, goal, open_set, closed_set)
         show_board(open_set, closed_set)
-        if abs(time() - sort_time) > 0.01:
-            print("Dijkstra show board time:", time() - sort_time)
 
         if found is True:
             return True
         closed_set.add(q_node)
-        if abs(time() - start_time) > 0.01:
-            print("Full Dijkstra loop: ", time() - start_time)
     return False
 
 
@@ -316,7 +306,6 @@ def double_dijkstras_pathfinding(start: TSquare, goal: TSquare):
 
     while(start_open_set or goal_open_set):
         ''' while the open list is not empty '''
-        start_time = time()
         '''find the node with the least f on
         the open list, call it "q" '''
         start_q_node = min(start_open_set, key=lambda x: x.f)
@@ -348,8 +337,6 @@ def double_dijkstras_pathfinding(start: TSquare, goal: TSquare):
 
         closed_set.add(start_q_node)
         closed_set.add(goal_q_node)
-        if abs(time() - start_time) > 0.01:
-            print("Full Dijkstra loop: ", time() - start_time)
     return False
 
 
