@@ -160,45 +160,6 @@ class Board():
                 closed_list.append(q_node)
             return False
 
-        def a_star_search_neighbours(
-                self, q_node, goal, open_list, closed_list):
-            ''' Search for selected node neighbours, calculate
-                their distances and add then to open_list. If
-                the end was found return open_list, True
-                else open_list, False '''
-
-            for neighbour in q_node.neighbours:
-                ''' Generate sucessors and set their
-                    parents to q '''
-                if neighbour.get_coordinates() == goal.get_coordinates():
-                    ''' if successor is the goal, stop search '''
-                    neighbour.add_parent(q_node)
-                    return open_list, True
-
-                if neighbour in closed_list or not neighbour.traversable:
-                    continue
-                temp_g = q_node.g + distance_between(q_node, neighbour)
-                if neighbour in open_list:
-                    neighbour_index = open_list.index(neighbour)
-                    if temp_g > open_list[neighbour_index].g:
-                        continue
-                neighbour.g = temp_g
-                neighbour.add_parent(q_node)
-                neighbour.h = manhattan_distance(
-                    neighbour.get_coordinates(), goal.get_coordinates())
-                neighbour.f = neighbour.g + neighbour.h
-                open_list.append(neighbour)
-                for column in self.grid:
-                    for square in column:
-                        if square in open_list:
-                            square.set_colour(GREENYELLOW_COLOUR)
-                        elif square in closed_list:
-                            square.set_colour(DARKSEAGREEN_COLOUR)
-
-                self.show()
-                sleep(TIME_TICK)
-            return open_list, False
-
         def get_square_at(self, coordinate: (int, int)) -> TSquare:
             ''' Returns the square available at given
                 coordinate if it exists'''
@@ -310,13 +271,12 @@ def a_star_search_neighbours(
 def show_board(open_list, closed_list) -> None:
     ''' Show the board if there's already a board created '''
     board = Board(0, 0)
-    [map(show_square_a_star, x, open_list, closed_list) for x in board.grid]
+    for column in board.grid:
+        for square in column:
+            if square in open_list:
+                square.set_colour(GREENYELLOW_COLOUR)
+            elif square in closed_list:
+                square.set_colour(DARKSEAGREEN_COLOUR)
+
     board.show()
     sleep(TIME_TICK)
-
-
-def show_square_a_star(square, open_list, closed_list):
-    if square in open_list:
-        square.set_colour(GREENYELLOW_COLOUR)
-    elif square in closed_list:
-        square.set_colour(DARKSEAGREEN_COLOUR)
