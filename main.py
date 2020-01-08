@@ -2,11 +2,13 @@
 Used to show graphic interface.
 '''
 import pygame
+from time import time
+from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
+    DARKGREEN_COLOUR, TIME_TICK
 from time import sleep
-from gui_helper import CANVAS_DIMENSION, BOARD_DIMENSION, DARKGREEN_COLOUR, TIME_TICK
 from board import Board
 
-
+start_time = time()
 pygame.init()
 
 
@@ -20,7 +22,7 @@ if was_pathfound:
     while(path_square):
         path_square.set_colour(DARKGREEN_COLOUR)
         path_square = path_square.parent_square
-        sleep(TIME_TICK*2)
         board.show()
 board.show()
+print(time() - start_time)
 pygame.quit()
