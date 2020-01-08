@@ -24,6 +24,7 @@ if was_pathfound:
         path_square = path_square.parent_square
         board.show()
         sleep(TIME_TICK)
+
 board.show()
 print(time() - start_time)
 pygame.quit()
