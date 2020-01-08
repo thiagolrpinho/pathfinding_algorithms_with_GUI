@@ -11,12 +11,12 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 20
+BOARD_DIMENSION = 100
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
-OBSTACLES_RATIO = 0
+OBSTACLES_RATIO = 0.5
 
 # Time
-TIME_TICK = 0.01
+TIME_TICK = 0.00
 
 
 TSquare = TypeVar("TSquare", bound="Square")
@@ -29,7 +29,7 @@ class Square():
     '''
     def __init__(self, pygame, y_coordinate: int, x_coordinate: int) -> None:
         self.pygame = pygame
-        self.neighbours = []
+        self.neighbours = set()
         self.parent_square = None
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
@@ -61,7 +61,7 @@ class Square():
         return (self.y_coordinate, self.x_coordinate)
 
     def add_neighbour(self, neighbour_square: (int, int)) -> None:
-        self.neighbours.append(neighbour_square)
+        self.neighbours.add(neighbour_square)
 
     def add_parent(self, parent_square: TSquare) -> None:
         self.parent_square = parent_square
@@ -144,30 +144,6 @@ class Board():
                 for square in column:
                     if random.random() < percentual_chance:
                         square.set_obstacle(True)
-
-        def a_star_pathfind(self, start: TSquare, goal: TSquare):
-            ''' Following VibhakarMohta instructions available in geelsforgeeks
-                Initialize the open list
-                Initialize the closed list
-                put the starting node on the open
-                list '''
-            open_list = []
-            closed_list = []
-
-            open_list.append(start)
-            while(open_list):
-                ''' while the open list is not empty '''
-                open_list.sort(key=lambda x: x.f, reverse=True)
-                '''find the node with the least f on
-                the open list, call it "q" '''
-                q_node = open_list.pop()
-                ''' pop q off the open list '''
-                open_list, found = self.a_star_search_neighbours(
-                    q_node, goal, open_list, closed_list)
-                if found is True:
-                    return True
-                closed_list.append(q_node)
-            return False
 
         def get_square_at(self, coordinate: (int, int)) -> TSquare:
             ''' Returns the square available at given
@@ -328,11 +304,14 @@ def dijkstras_search_neighbours(
 def show_board(open_set, closed_list) -> None:
     ''' Show the board if there's already a board created '''
     board = Board(0, 0)
-
     for square in open_set:
-        square.set_colour(GREENYELLOW_COLOUR)
+        if board.start_square != square and\
+                board.end_square != square:
+            square.set_colour(GREENYELLOW_COLOUR)
     for square in closed_list:
-        square.set_colour(DARKSEAGREEN_COLOUR)
+        if board.start_square != square and\
+                board.end_square != square:
+            square.set_colour(DARKSEAGREEN_COLOUR)
 
     board.show()
     sleep(TIME_TICK)
