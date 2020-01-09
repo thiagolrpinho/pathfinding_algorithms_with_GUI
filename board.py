@@ -11,7 +11,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 100
+BOARD_DIMENSION = 5
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 OBSTACLES_RATIO = 0.2
 
@@ -297,7 +297,6 @@ def dijkstras_search_neighbours(
         neighbour.add_parent(q_node)
         neighbour.f = neighbour.g
         open_set.add(neighbour)
-
     return open_set, False
 
 
@@ -373,11 +372,37 @@ def double_dijkstras_pathfinding(start: TSquare, goal: TSquare) -> bool:
             open_sets[0].union(open_sets[1]),
             closed_sets[0].union(closed_sets[1]))
 
-        
     return False
     ''' If neither the intersection or the goals weren't reached
         then no path can be found '''
 
+
+def shortest_path_dfs(start, goal):
+    ''' Finds the shortest path among all possible paths
+        available in the graph. Return True if found
+        and the path is available inside the nodes '''
+    all_possible_paths = list(depth_first_search(start, goal))
+    if not all_possible_paths:
+        return False
+    shortest_path = min(all_possible_paths, key=lambda x:len(x))
+    previous_node = shortest_path[0]
+    for node in shortest_path[1:]:
+        node.parent_square = previous_node
+        previous_node = node
+    return True
+
+def depth_first_search(start, goal):
+    ''' Search all paths in the graph looking
+        between start and goal using depth first'''
+    stack = [(start, [start])]
+    while stack:
+        (vertex, path) = stack.pop()
+        for next_node in vertex.neighbours - set(path):
+            if next_node == goal:
+                yield path + [next_node]
+            else:
+                stack.append((next_node, path + [next_node]))
+    show_board(stack, set(path))
 
 def show_board(open_set, closed_list) -> None:
     ''' Show the board if there's already a board created '''
