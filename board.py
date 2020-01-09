@@ -400,8 +400,10 @@ def depth_first_search(start, goal):
         for next_node in vertex.neighbours - set(path):
             if next_node == goal:
                 yield path + [next_node]
-            else:
+            elif next_node.traversable:
                 stack.append((next_node, path + [next_node]))
+            else:
+                continue
     show_board(stack, set(path))
 
 def show_board(open_set, closed_list) -> None:
