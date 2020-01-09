@@ -404,10 +404,38 @@ def depth_first_search(start, goal):
                 all_paths.append(path + [next_node])
             elif next_node.traversable:
                 stack.append((next_node, path + [next_node]))
-            else:
-                continue
         show_board(set(path), set())
     return all_paths
+
+
+def shortest_path_bfs(start, goal):
+    ''' Finds the shortest path using breath_first_search. 
+        Return True if found and the path is available
+        inside the nodes '''
+    shortest_path = breath_first_search(start, goal)
+    if not shortest_path:
+        return False
+    previous_node = shortest_path[0]
+    for node in shortest_path[1:]:
+        node.parent_square = previous_node
+        previous_node = node
+    return True
+
+
+def breath_first_search(start, goal):
+    ''' BFS also searches for all paths
+        but as first found is the shortest
+        returns the first one'''
+    queue = [(start, [start])]
+    while queue:
+        (vertex, path) = queue.pop(0)
+        for next in vertex.neighbours - set(path):
+            if next == goal:
+                return path + [next]
+            elif next.traversable:
+                queue.append((next, path + [next]))
+        show_board(set(path), set())
+    return None
 
 
 def show_board(open_set, closed_list) -> None:
