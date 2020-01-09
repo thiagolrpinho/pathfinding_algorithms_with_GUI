@@ -13,10 +13,10 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 CANVAS_DIMENSION = 700
 BOARD_DIMENSION = 100
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
-OBSTACLES_RATIO = 0.5
+OBSTACLES_RATIO = 0.2
 
 # Time
-TIME_TICK = 0.00
+TIME_TICK = 0.01
 
 
 TSquare = TypeVar("TSquare", bound="Square")
@@ -267,7 +267,7 @@ def dijkstras_pathfinding(start: TSquare, goal: TSquare):
             q_node, goal, open_set, closed_set)
         show_board(open_set, closed_set)
 
-        if found is True:
+        if found:
             return True
         closed_set.add(q_node)
     return False
@@ -299,6 +299,84 @@ def dijkstras_search_neighbours(
         open_set.add(neighbour)
 
     return open_set, False
+
+
+def double_dijkstras_pathfinding(start: TSquare, goal: TSquare) -> bool:
+    ''' Like normal dijkstra's algorithm, but searching from both
+      start and end at same time. Returns true if found a path
+      and goal will have a recursive path till start using
+      parent_square attribute '''
+    if start == goal:
+        goal.parent_square = start
+        return True
+
+    open_sets = [set() for i in range(2)]
+    closed_sets = [set() for i in range(2)]
+
+    open_sets[0].add(start)
+    open_sets[1].add(goal)
+    while(open_sets[0] and open_sets[1]):
+        ''' while any of the open lists are not empty find the nodes
+            with the least f on the  each open list, call it "q"'''
+        q_nodes = []
+        for i in range(2):
+            q_nodes.append(min(open_sets[i], key=lambda x: x.f))
+            open_sets[i].remove(q_nodes[i])
+        ''' pop each q off each open list '''
+
+        open_sets[0], found = dijkstras_search_neighbours(
+            q_nodes[0], goal, open_sets[0], closed_sets[0])
+        if found:
+            return True
+        open_sets[1], found = dijkstras_search_neighbours(
+            q_nodes[1], start, open_sets[1], closed_sets[1])
+        ''' Search neighbours for both end and starting nodes'''
+        if found:
+            current_node = start
+            previous_node = None
+            while(current_node):
+                next_node = current_node.parent_square
+                current_node.parent_square = previous_node
+                previous_node = current_node
+                current_node = next_node
+            return True
+
+        for i in range(2):
+            closed_sets[i].add(q_nodes[i])
+
+        if bool(open_sets[0].intersection(open_sets[1])):
+            ''' If there's a node that's in both open sets then
+                a path was found. Now we need to connect then '''
+            intersection_node = min(
+                open_sets[0].intersection(open_sets[1]), key=lambda x: x.f)
+
+            if intersection_node.parent_square == q_nodes[0]:
+                closest_neighbour = min(
+                    closed_sets[1].intersection(intersection_node.neighbours),
+                    key=lambda x: x.f)
+                current_node = closest_neighbour
+            else:
+                closest_neighbour = min(
+                    closed_sets[0].intersection(intersection_node.neighbours),
+                    key=lambda x: x.f)
+                current_node = closest_neighbour
+
+            previous_node = intersection_node
+            while(current_node):
+                next_node = current_node.parent_square
+                current_node.parent_square = previous_node
+                previous_node = current_node
+                current_node = next_node
+            return True
+
+        show_board(
+            open_sets[0].union(open_sets[1]),
+            closed_sets[0].union(closed_sets[1]))
+
+        
+    return False
+    ''' If neither the intersection or the goals weren't reached
+        then no path can be found '''
 
 
 def show_board(open_set, closed_list) -> None:
