@@ -381,7 +381,7 @@ def shortest_path_dfs(start, goal):
     ''' Finds the shortest path among all possible paths
         available in the graph. Return True if found
         and the path is available inside the nodes '''
-    all_possible_paths = list(depth_first_search(start, goal))
+    all_possible_paths = depth_first_search(start, goal)
     if not all_possible_paths:
         return False
     shortest_path = min(all_possible_paths, key=lambda x:len(x))
@@ -391,20 +391,24 @@ def shortest_path_dfs(start, goal):
         previous_node = node
     return True
 
+
 def depth_first_search(start, goal):
     ''' Search all paths in the graph looking
         between start and goal using depth first'''
     stack = [(start, [start])]
+    all_paths = []
     while stack:
         (vertex, path) = stack.pop()
         for next_node in vertex.neighbours - set(path):
             if next_node == goal:
-                yield path + [next_node]
+                all_paths.append(path + [next_node])
             elif next_node.traversable:
                 stack.append((next_node, path + [next_node]))
             else:
                 continue
-    show_board(stack, set(path))
+        show_board(set(path), set())
+    return all_paths
+
 
 def show_board(open_set, closed_list) -> None:
     ''' Show the board if there's already a board created '''
