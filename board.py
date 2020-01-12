@@ -13,7 +13,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 CANVAS_DIMENSION = 700
 BOARD_DIMENSION = 30
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
-OBSTACLES_RATIO = 0.2
+OBSTACLES_RATIO = 0.3
 
 # Time
 TIME_TICK = 0.01
@@ -31,6 +31,7 @@ class Square():
         self.pygame = pygame
         self.neighbours = set()
         self.parent_square = None
+        self.special = False
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
         self.set_colour(WHITE_COLOUR)
@@ -54,8 +55,9 @@ class Square():
     def set_colour(self, new_colour: (int, int, int)) -> None:
         ''' Changes the square colour and signalizes it's
             colour has changed '''
-        self.colour_changed = True
-        self.colour = new_colour
+        if not self.special:
+            self.colour_changed = True
+            self.colour = new_colour
 
     def get_coordinates(self) -> (int, int):
         return (self.y_coordinate, self.x_coordinate)
@@ -70,6 +72,11 @@ class Square():
         self.traversable = not is_obstacle
         if not self.traversable:
             self.set_colour(BLACK_COLOUR)
+
+    def set_special(self, is_special: bool) -> None:
+        ''' Set a node as special, it's color
+            can't be changed '''
+        self.special = True
 
 
 class Board():
@@ -102,12 +109,14 @@ class Board():
             self.start_square = self.grid[y_coordinate][x_coordinate]
             self.start_square.set_colour(POWDERBLUE_COLOUR)
             self.start_square.set_obstacle(False)
+            self.start_square.set_special(True)
 
         def set_end(self, y_coordinate: int, x_coordinate: int) -> None:
             ''' Configure the square at given coordinates as the end square '''
             square = self.grid[y_coordinate][x_coordinate]
             square.set_colour(ORANGE_COLOUR)
             square.set_obstacle(False)
+            square.set_special(True)
             self.end_square.append(square)
 
         def add_adjacent_neighbours(self) -> None:
@@ -196,7 +205,7 @@ def distance_between(
         first_node.get_coordinates(), second_node.get_coordinates())
 
 
-def a_star_pathfind(start: TSquare, goal: TSquare):
+def a_star_pathfind(start: TSquare, goal: TSquare) -> List[TSquare]:
     ''' Following VibhakarMohta instructions available in geelsforgeeks
         Initialize the open set
         Initialize the closed set
@@ -204,7 +213,7 @@ def a_star_pathfind(start: TSquare, goal: TSquare):
     '''
     open_set = set()
     closed_set = set()
-
+    start.parent_square = None
     open_set.add(start)
     while(open_set):
         ''' while the open list is not empty '''
@@ -215,10 +224,11 @@ def a_star_pathfind(start: TSquare, goal: TSquare):
         ''' pop q off the open list '''
         open_set, found = a_star_search_neighbours(
             q_node, goal, open_set, closed_set)
-        if found is True:
-            return True
+        if found:
+            path = extract_path(goal)
+            return path
         closed_set.add(q_node)
-    return False
+    return []
 
 
 def a_star_search_neighbours(

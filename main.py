@@ -27,7 +27,11 @@ board.set_end((BOARD_DIMENSION-1)//2, (BOARD_DIMENSION-1)//2)
 path = []
 partial_start = board.start_square
 for goal in board.end_square:
-    path = dijkstras_pathfinding(partial_start, goal) + path
+    path_found = a_star_pathfind(partial_start, goal)
+    if not path_found:
+        path = []
+        break
+    path = path_found + path
     partial_start = goal
 
 if not path:
