@@ -1,7 +1,7 @@
 import pygame
 import random
 from time import sleep
-from typing import TypeVar
+from typing import TypeVar, List
 
 # Colours
 WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
@@ -11,7 +11,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 5
+BOARD_DIMENSION = 30
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
 OBSTACLES_RATIO = 0.2
 
@@ -74,11 +74,12 @@ class Square():
 
 class Board():
     ''' Singleton for a board, it encapsules the visual representation of the
-    board '''
+        board '''
     class __Board():
         def __init__(self, pygame, dimension: int) -> None:
             self.pygame = pygame
             weight, height = dimension, dimension
+            self.end_square = []
             self.grid = [
                 [Square(
                     pygame, y, x)
@@ -104,9 +105,10 @@ class Board():
 
         def set_end(self, y_coordinate: int, x_coordinate: int) -> None:
             ''' Configure the square at given coordinates as the end square '''
-            self.end_square = self.grid[y_coordinate][x_coordinate]
-            self.end_square.set_colour(ORANGE_COLOUR)
-            self.end_square.set_obstacle(False)
+            square = self.grid[y_coordinate][x_coordinate]
+            square.set_colour(ORANGE_COLOUR)
+            square.set_obstacle(False)
+            self.end_square.append(square)
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all squares in grid '''
@@ -249,12 +251,12 @@ def a_star_search_neighbours(
     return open_set, False
 
 
-def dijkstras_pathfinding(start: TSquare, goal: TSquare):
+def dijkstras_pathfinding(start: TSquare, goal: TSquare) -> List[TSquare]:
     ''' Similar to a star pathfinding but without the
         heuristic function '''
     open_set = set()
     closed_set = set()
-
+    start.parent_square = None
     open_set.add(start)
     while(open_set):
         ''' while the open list is not empty '''
@@ -268,9 +270,10 @@ def dijkstras_pathfinding(start: TSquare, goal: TSquare):
         show_board(open_set, closed_set)
 
         if found:
-            return True
+            path = extract_path(goal)
+            return path
         closed_set.add(q_node)
-    return False
+    return []
 
 
 def dijkstras_search_neighbours(
@@ -452,3 +455,32 @@ def show_board(open_set, closed_list) -> None:
 
     board.show()
     sleep(TIME_TICK)
+
+
+def extract_path(end_square: TSquare) -> List[TSquare]:
+    ''' Recursiverly search on end_square to
+        extract each node tha's part of path
+        and returns it as a List '''
+    if end_square.parent_square is None:
+        print("Error following path")
+        exit
+    path_square = end_square
+    path = []
+    while(path_square):
+        path.append(path_square)
+        path_square = path_square.parent_square
+    return path
+
+
+def show_path(path_list: List[TSquare]) -> None:
+    ''' Recursiverly search on end_square to
+        draw a path on the board '''
+    board = Board(0,0)
+    if not path_list:
+        print("Error following path")
+        exit
+    while(path_list):
+        path_square = path_list.pop()
+        path_square.set_colour(DARKGREEN_COLOUR)
+        board.show()
+        sleep(TIME_TICK*10)
