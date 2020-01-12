@@ -18,14 +18,17 @@ pygame.init()
 pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
+board.set_end((BOARD_DIMENSION-1)//4, (BOARD_DIMENSION-1)//2)
+board.set_end((BOARD_DIMENSION-1)//2, (BOARD_DIMENSION-1)//4)
 board.set_end((BOARD_DIMENSION-1), (BOARD_DIMENSION-1))
 board.set_end((BOARD_DIMENSION-1)//2, (BOARD_DIMENSION-1)//2)
 
-end_square = board.end_square.pop()
-end_square_2 = board.end_square.pop()
 
-path = dijkstras_pathfinding(board.start_square, end_square)
-path = dijkstras_pathfinding(end_square, end_square_2) + path
+path = []
+partial_start = board.start_square
+for goal in board.end_square:
+    path = dijkstras_pathfinding(partial_start, goal) + path
+    partial_start = goal
 
 if not path:
     print("No Path available")
