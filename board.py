@@ -12,7 +12,8 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
 BOARD_DIMENSION = 30
-SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION - 1
+SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION
+NODE_SIZE = SQUARE_SIZE - 1
 OBSTACLES_RATIO = 0.3
 
 # Time
@@ -46,10 +47,10 @@ class Node():
                 self.colour,
                 self.pygame.Rect(
                     self.x_coordinate*(
-                        SQUARE_SIZE+1),
+                        SQUARE_SIZE),
                     self.y_coordinate*(
-                        SQUARE_SIZE+1),
-                    SQUARE_SIZE, SQUARE_SIZE))
+                        SQUARE_SIZE),
+                    NODE_SIZE, NODE_SIZE))
             self.colour_changed = False
 
     def set_colour(self, new_colour: (int, int, int)) -> None:
@@ -103,17 +104,17 @@ class Board():
                     node.show()
             pygame.display.update()
 
-        def set_start(self, y_coordinate: int, x_coordinate: int) -> None:
+        def set_start(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates
                 as the start node'''
-            self.start_node = self.grid[y_coordinate][x_coordinate]
+            self.start_node = self.get_node_at(coordinates)
             self.start_node.set_colour(POWDERBLUE_COLOUR)
             self.start_node.set_obstacle(False)
             self.start_node.set_special(True)
 
-        def set_end(self, y_coordinate: int, x_coordinate: int) -> None:
+        def set_end(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates as the end node '''
-            node = self.grid[y_coordinate][x_coordinate]
+            node = self.get_node_at(coordinates)
             node.set_colour(ORANGE_COLOUR)
             node.set_obstacle(False)
             node.set_special(True)
