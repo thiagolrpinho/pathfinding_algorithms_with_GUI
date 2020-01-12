@@ -19,14 +19,14 @@ pygame_window = pygame.display.set_mode((CANVAS_DIMENSION, CANVAS_DIMENSION))
 board = Board(pygame, BOARD_DIMENSION)
 board.set_start(0, 0)
 board.set_end((BOARD_DIMENSION-1)//4, (BOARD_DIMENSION-1)//2)
-board.set_end((BOARD_DIMENSION-1)//2, (BOARD_DIMENSION-1)//4)
+board.set_end((BOARD_DIMENSION-1)//3, (BOARD_DIMENSION-1)//6)
 board.set_end((BOARD_DIMENSION-1), (BOARD_DIMENSION-1))
 board.set_end((BOARD_DIMENSION-1)//2, (BOARD_DIMENSION-1)//2)
 
 
 path = []
-partial_start = board.start_square
-for goal in board.end_square:
+partial_start = board.start_node
+for goal in board.end_node:
     path_found = a_star_pathfind(partial_start, goal)
     if not path_found:
         path = []
