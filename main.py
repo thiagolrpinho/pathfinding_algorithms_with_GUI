@@ -43,7 +43,7 @@ for _ in range(2):
     board.show()
 
 coordinates = capture_click_position()
-while coordinates != (0, 0):
+while coordinates != board.start_node.get_coordinates():
     board.alternate_obstacle_at(coordinates)
     board.show()
     coordinates = capture_click_position()
