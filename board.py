@@ -1,7 +1,9 @@
-import pygame
 import random
 from time import sleep
-from typing import TypeVar, List
+from typing import List, TypeVar
+
+import noise
+import pygame
 
 # Colours
 WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
@@ -95,7 +97,6 @@ class Board():
                 for y in range(height)]
             self.add_adjacent_neighbours()
             self.add_diagonal_neighbours()
-            self.set_random_obstacles(OBSTACLES_RATIO)
 
         def show(self):
             ''' Prints all board nodes on canvas '''
@@ -151,11 +152,30 @@ class Board():
                         lambda x: x < 0 or x >= BOARD_DIMENSION,
                         possible_coordinate)) == 0
 
+        def alternate_obstacle_at(self, coordinate: (int, int)) -> None:
+            node = self.get_node_at(coordinate)
+            if node.traversable:
+                node.set_obstacle(True)
+            else:
+                node.set_obstacle(False)
+
         def set_random_obstacles(self, percentual_chance: int) -> None:
             for column in self.grid:
                 for node in column:
                     if random.random() < percentual_chance:
                         node.set_obstacle(True)
+
+        def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
+            x_length = len(self.grid)
+            y_length = len(self.grid[0])
+            base = 0
+            for i in range(x_length):
+                for j in range(y_length):
+                    if (noise.snoise2(
+                                i/x_length*3,
+                                j/y_length*3,
+                                1)+1)/2 < percentual_chance:
+                        self.grid[i][j].set_obstacle(True)
 
         def get_node_at(self, coordinate: (int, int)) -> TNode:
             ''' Returns the node available at given
@@ -398,7 +418,7 @@ def shortest_path_dfs(start, goal):
     all_possible_paths = depth_first_search(start, goal)
     if not all_possible_paths:
         return False
-    shortest_path = min(all_possible_paths, key=lambda x:len(x))
+    shortest_path = min(all_possible_paths, key=lambda x: len(x))
     previous_node = shortest_path[0]
     for node in shortest_path[1:]:
         node.parent_node = previous_node
@@ -423,7 +443,7 @@ def depth_first_search(start, goal):
 
 
 def shortest_path_bfs(start, goal):
-    ''' Finds the shortest path using breath_first_search. 
+    ''' Finds the shortest path using breath_first_search.
         Return True if found and the path is available
         inside the nodes '''
     shortest_path = breath_first_search(start, goal)
@@ -486,7 +506,7 @@ def extract_path(end_node: TNode) -> List[TNode]:
 def show_path(path_list: List[TNode]) -> None:
     ''' Recursiverly search on end_node to
         draw a path on the board '''
-    board = Board(0,0)
+    board = Board(0, 0)
     if not path_list:
         print("Error following path")
         exit
