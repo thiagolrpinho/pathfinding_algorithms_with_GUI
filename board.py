@@ -152,6 +152,13 @@ class Board():
                         lambda x: x < 0 or x >= BOARD_DIMENSION,
                         possible_coordinate)) == 0
 
+        def alternate_obstacle_at(self, coordinate: (int, int)) -> None:
+            node = self.get_node_at(coordinate)
+            if node.traversable:
+                node.set_obstacle(True)
+            else:
+                node.set_obstacle(False)
+
         def set_random_obstacles(self, percentual_chance: int) -> None:
             for column in self.grid:
                 for node in column:

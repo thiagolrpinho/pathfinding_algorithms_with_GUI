@@ -36,14 +36,17 @@ board = Board(pygame, BOARD_DIMENSION)
 board.show()
 coordinates = capture_click_position()
 board.set_start(coordinates)
-board.set_perlin_noise_obstacles(0.3)
 board.show()
-for _ in range(3):
+for _ in range(2):
     coordinates = capture_click_position()
     board.set_end(coordinates)
     board.show()
 
-board.set_random_obstacles(OBSTACLES_RATIO)
+coordinates = capture_click_position()
+while coordinates != (0, 0):
+    board.alternate_obstacle_at(coordinates)
+    board.show()
+    coordinates = capture_click_position()
 
 path = []
 partial_start = board.start_node
