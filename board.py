@@ -95,7 +95,6 @@ class Board():
                 for y in range(height)]
             self.add_adjacent_neighbours()
             self.add_diagonal_neighbours()
-            self.set_random_obstacles(OBSTACLES_RATIO)
 
         def show(self):
             ''' Prints all board nodes on canvas '''
@@ -398,7 +397,7 @@ def shortest_path_dfs(start, goal):
     all_possible_paths = depth_first_search(start, goal)
     if not all_possible_paths:
         return False
-    shortest_path = min(all_possible_paths, key=lambda x:len(x))
+    shortest_path = min(all_possible_paths, key=lambda x: len(x))
     previous_node = shortest_path[0]
     for node in shortest_path[1:]:
         node.parent_node = previous_node
@@ -423,7 +422,7 @@ def depth_first_search(start, goal):
 
 
 def shortest_path_bfs(start, goal):
-    ''' Finds the shortest path using breath_first_search. 
+    ''' Finds the shortest path using breath_first_search.
         Return True if found and the path is available
         inside the nodes '''
     shortest_path = breath_first_search(start, goal)
@@ -486,7 +485,7 @@ def extract_path(end_node: TNode) -> List[TNode]:
 def show_path(path_list: List[TNode]) -> None:
     ''' Recursiverly search on end_node to
         draw a path on the board '''
-    board = Board(0,0)
+    board = Board(0, 0)
     if not path_list:
         print("Error following path")
         exit
