@@ -36,6 +36,7 @@ board = Board(pygame, BOARD_DIMENSION)
 board.show()
 coordinates = capture_click_position()
 board.set_start(coordinates)
+board.set_perlin_noise_obstacles(0.3)
 board.show()
 for _ in range(3):
     coordinates = capture_click_position()

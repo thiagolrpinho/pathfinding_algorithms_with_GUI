@@ -1,7 +1,9 @@
-import pygame
 import random
 from time import sleep
-from typing import TypeVar, List
+from typing import List, TypeVar
+
+import noise
+import pygame
 
 # Colours
 WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
@@ -155,6 +157,18 @@ class Board():
                 for node in column:
                     if random.random() < percentual_chance:
                         node.set_obstacle(True)
+
+        def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
+            x_length = len(self.grid)
+            y_length = len(self.grid[0])
+            base = 0
+            for i in range(x_length):
+                for j in range(y_length):
+                    if (noise.snoise2(
+                                i/x_length*3,
+                                j/y_length*3,
+                                1)+1)/2 < percentual_chance:
+                        self.grid[i][j].set_obstacle(True)
 
         def get_node_at(self, coordinate: (int, int)) -> TNode:
             ''' Returns the node available at given
