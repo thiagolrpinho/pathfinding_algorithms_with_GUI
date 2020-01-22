@@ -42,11 +42,8 @@ for _ in range(2):
     board.set_end(coordinates)
     board.show()
 
-coordinates = capture_click_position()
-while coordinates != board.start_node.get_coordinates():
-    board.alternate_obstacle_at(coordinates)
-    board.show()
-    coordinates = capture_click_position()
+# board.set_random_obstacles(0.5)
+board.set_perlin_noise_obstacles(0.3)
 
 path = []
 partial_start = board.start_node

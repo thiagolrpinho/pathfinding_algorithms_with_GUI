@@ -13,7 +13,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 30
+BOARD_DIMENSION = 100
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION
 NODE_SIZE = SQUARE_SIZE - 1
 OBSTACLES_RATIO = 0.3
@@ -75,6 +75,8 @@ class Node():
         self.traversable = not is_obstacle
         if not self.traversable:
             self.set_colour(BLACK_COLOUR)
+        elif not self.special:
+            self.set_colour(WHITE_COLOUR)
 
     def set_special(self, is_special: bool) -> None:
         ''' Set a node as special, it's color
@@ -110,15 +112,15 @@ class Board():
                 as the start node'''
             self.start_node = self.get_node_at(coordinates)
             self.start_node.set_colour(POWDERBLUE_COLOUR)
-            self.start_node.set_obstacle(False)
             self.start_node.set_special(True)
+            self.start_node.set_obstacle(False)
 
         def set_end(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates as the end node '''
             node = self.get_node_at(coordinates)
             node.set_colour(ORANGE_COLOUR)
-            node.set_obstacle(False)
             node.set_special(True)
+            node.set_obstacle(False)
             self.end_node.append(node)
 
         def add_adjacent_neighbours(self) -> None:
