@@ -23,18 +23,22 @@ def capture_click_position() -> (int, int):
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 pos = pos[::-1]
-                coordinates = (
-                    int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
-                    int(pos[1]/SQUARE_SIZE))
-                clicked = True
+                if pos[0] > MENU_BAR_HEIGHT:
+                    coordinates = (
+                        int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
+                        int(pos[1]/SQUARE_SIZE))
+                    clicked = True
+                else:
+                    coordinates = (int(pos[0]/5), int(pos[1]/100))
+                    clicked = True
     return coordinates
 
 
 available_algorithms = {
-                "a_star": "a_star_pathfind",
-                "dijkstras": "dijkstras_pathfinding",
-                "dfs": "shortest_path_dfs",
-                "bfs": "shortest_path_bfs"
+                "AST": ["a_star_pathfind"],
+                "DIJ": ["dijkstras_pathfinding"],
+                "DFS": ["shortest_path_dfs"],
+                "BFS": ["shortest_path_bfs"]
                 }
 
 
@@ -42,18 +46,37 @@ start_time = time()
 pygame.init()
 
 pygame_window = pygame.display.set_mode(
-    (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT ))
+    (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
 board = Board(pygame, BOARD_DIMENSION)
 
-for i in range(len(available_algorithms)):
+i = 0
+for key in available_algorithms:
+    available_algorithms[key].append(((i+1)*75, 5))
     pygame.draw.rect(
         pygame.display.get_surface(),
         WHITE_COLOUR,
         pygame.Rect(
-            i*(50),5,
-            45, 30))
+            (i+1)*(100), 5,
+            90, 30))
+    i += 1
 
 board.show()
+
+# Choose which algorithm will run
+coordinates = capture_click_position()
+# Need to associate coordinates and functions dynamically
+# Need to refactor here so it can be better modularized
+# Need to refactor BFS, it's not working somehow
+if coordinates[1] == 1:
+    choosen_algorithm = available_algorithms['AST'][0]
+elif coordinates[1] == 2:
+    choosen_algorithm = available_algorithms['DIJ'][0]
+elif coordinates[1] == 3:
+    choosen_algorithm = available_algorithms['DFS'][0]
+elif coordinates[1] == 4:
+    choosen_algorithm = available_algorithms['BFS'][0]
+
+print(choosen_algorithm)
 
 coordinates = capture_click_position()
 board.set_start(coordinates)
@@ -69,7 +92,7 @@ board.set_perlin_noise_obstacles(0.3)
 path = []
 partial_start = board.start_node
 for goal in board.end_node:
-    path_found = a_star_pathfind(partial_start, goal)
+    path_found = eval(choosen_algorithm+"(partial_start, goal)")
     if not path_found:
         path = []
         break
