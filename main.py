@@ -4,7 +4,7 @@ Used to show graphic interface.
 import pygame
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
-    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT
+    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -23,9 +23,19 @@ def capture_click_position() -> (int, int):
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 pos = pos[::-1]
-                coordinates = tuple(map(lambda x: int(x//SQUARE_SIZE), pos))
+                coordinates = (
+                    int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
+                    int(pos[1]/SQUARE_SIZE))
                 clicked = True
     return coordinates
+
+
+available_algorithms = {
+                "a_star": "a_star_pathfind",
+                "dijkstras": "dijkstras_pathfinding",
+                "dfs": "shortest_path_dfs",
+                "bfs": "shortest_path_bfs"
+                }
 
 
 start_time = time()
@@ -34,7 +44,17 @@ pygame.init()
 pygame_window = pygame.display.set_mode(
     (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT ))
 board = Board(pygame, BOARD_DIMENSION)
+
+for i in range(len(available_algorithms)):
+    pygame.draw.rect(
+        pygame.display.get_surface(),
+        WHITE_COLOUR,
+        pygame.Rect(
+            i*(50),5,
+            45, 30))
+
 board.show()
+
 coordinates = capture_click_position()
 board.set_start(coordinates)
 board.show()
