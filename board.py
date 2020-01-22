@@ -13,7 +13,8 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 100
+MENU_BAR_HEIGHT = 50
+BOARD_DIMENSION = 10
 SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION
 NODE_SIZE = SQUARE_SIZE - 1
 OBSTACLES_RATIO = 0.3
@@ -48,10 +49,8 @@ class Node():
                 pygame.display.get_surface(),
                 self.colour,
                 self.pygame.Rect(
-                    self.x_coordinate*(
-                        SQUARE_SIZE),
-                    self.y_coordinate*(
-                        SQUARE_SIZE),
+                    self.x_coordinate*(SQUARE_SIZE),
+                    MENU_BAR_HEIGHT + self.y_coordinate*(SQUARE_SIZE),
                     NODE_SIZE, NODE_SIZE))
             self.colour_changed = False
 
