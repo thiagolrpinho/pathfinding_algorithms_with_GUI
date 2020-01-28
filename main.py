@@ -5,12 +5,28 @@ import pygame
 import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
-    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR,\
-    BUTTON_AREA_SIZE, BUTTON_SIZE, TOTAL_NUMBER_OF_BUTTONS
+    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
 
+IMAGE_ICON_LIST_NAMES = [
+    "1_created_by_roundicons.png", "2_created_by_roundicons.png",
+    "3_created_by_roundicons.png", "4_created_by_roundicons.png",
+    "roman_1_created_by_roundicons.png", "roman_2_created_by_roundicons.png",
+    "roman_3_created_by_roundicons.png", "start_created_by_freepik.png",
+    "goal_created_by_freepik.png", "play_created_by_freepik.png",
+    "rewind_created_by_freepik.png", "power_created_by_freepik.png"
+]
+
+# UI related sizes
+TOTAL_NUMBER_OF_BUTTONS = len(IMAGE_ICON_LIST_NAMES)
+BUTTON_AREA_LENGTH = int(
+    (CANVAS_DIMENSION-SQUARE_SIZE)/TOTAL_NUMBER_OF_BUTTONS)
+BUTTON_SIZE = BUTTON_AREA_LENGTH - 1
+
+# PATHS
+ICONS_FOLDER_PATH = "assets/icons/"
 
 def capture_click_position() -> (int, int):
     ''' Waits for a click and returns the position
@@ -37,18 +53,16 @@ def capture_click_position() -> (int, int):
 
 
 def draw_menu_bar(menu_choices) -> None:
-    i = 0
     surface = pygame.display.get_surface()
     number_of_choices = len(menu_choices)
-    player = pygame.image.load(os.path.join("assets/icons/1_created_by_roundicons.png"))
-    player.convert()
-    for key in menu_choices:
-        available_algorithms[key].append(((i)*BUTTON_AREA_SIZE, 5))
+    for i, icon_name in enumerate(IMAGE_ICON_LIST_NAMES):
+        print(icon_name)
+        icon = pygame.image.load(os.path.join(ICONS_FOLDER_PATH + icon_name))
+        icon.convert()
         surface.blit(pygame.transform.scale(
-            player, (BUTTON_SIZE, BUTTON_SIZE)),
-            (int(SQUARE_SIZE/2)+i*BUTTON_AREA_SIZE, int(SQUARE_SIZE/2)))
+            icon, (BUTTON_AREA_LENGTH, 2*SQUARE_SIZE)),
+            (int(SQUARE_SIZE/2)+i*BUTTON_AREA_LENGTH, int(SQUARE_SIZE/2)))
         pygame.display.flip()
-        i += 1
 
 
 available_algorithms = {
@@ -70,9 +84,9 @@ pygame.init()
 
 pygame_window = pygame.display.set_mode(
     (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
+draw_menu_bar(available_algorithms)
 board = Board(pygame, BOARD_DIMENSION)
 
-draw_menu_bar(available_algorithms)
 
 board.show()
 
