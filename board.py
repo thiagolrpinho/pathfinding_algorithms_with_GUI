@@ -93,7 +93,7 @@ class Board():
             self.pygame = pygame
             weight, height = dimension, dimension
             self.start_node = None
-            self.end_node = []
+            self.goal_nodes = []
             self.grid = [
                 [Node(
                     pygame, y, x)
@@ -112,17 +112,21 @@ class Board():
 
         def set_start(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates
-                as the start node.
+                as the start node. If it's not an already
+                special node.
                 If other node was already the start, the old
                 start node becomes a normal node.'''
+            node = self.get_node_at(coordinates)
+            if node.special:
+                return None
             if not self.start_node:
-                self.start_node = self.get_node_at(coordinates)
+                self.start_node = node
                 self.start_node.set_colour(POWDERBLUE_COLOUR)
                 self.start_node.set_special(True)
                 self.start_node.set_obstacle(False)
             else:
                 self.remove_start_node()
-                self.start_node = self.get_node_at(coordinates)
+                self.start_node = node
                 self.start_node.set_colour(POWDERBLUE_COLOUR)
                 self.start_node.set_special(True)
                 self.start_node.set_obstacle(False)
@@ -133,13 +137,27 @@ class Board():
             self.start_node.set_colour(WHITE_COLOUR)
             self.start_node = None
 
-        def set_end(self, coordinates: (int, int)) -> None:
-            ''' Add the node at given coordinates as an goal node '''
+        def add_goal(self, coordinates: (int, int)) -> None:
+            ''' Add the node at given coordinates as an goal node 
+            if it's not already an special node(like a start node)'''
             node = self.get_node_at(coordinates)
-            node.set_colour(ORANGE_COLOUR)
-            node.set_special(True)
-            node.set_obstacle(False)
-            self.end_node.append(node)
+            if not node.special:
+                node.set_colour(ORANGE_COLOUR)
+                node.set_special(True)
+                node.set_obstacle(False)
+                self.goal_nodes.append(node)
+        
+        def remove_goal(self, coordinates: (int, int)) -> None:
+            removed_goal_index = None
+            for i, goal in enumerate(self.goal_nodes):
+                if coordinates == goal.get_coordinates():
+                    goal.set_special(False)
+                    goal.set_colour(WHITE_COLOUR)
+                    removed_goal_index = i
+                    break
+            if removed_goal_index is not None:
+                self.goal_nodes.remove(removed_goal_index)
+
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all nodes in grid '''

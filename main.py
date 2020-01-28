@@ -82,7 +82,7 @@ available_algorithms = {
     "PRL": ["set_perlin_noise_obstacles"],
     "MNL": [""],
     "START": ["set_start"],
-    "GOAL": ["set_end"],
+    "GOAL": ["add_goal"],
     "EXIT": [""]
 }
 
@@ -149,7 +149,7 @@ while not should_play:
                 if setting_start:
                     board.set_start(coordinates)
                 elif setting_goal:
-                    board.set_end(coordinates)
+                    board.add_goal(coordinates)
     board.show()
 
 
@@ -175,7 +175,7 @@ board.set_start(coordinates)
 board.show()
 for _ in range(2):
     coordinates = capture_click_position()
-    board.set_end(coordinates)
+    board.add_goal(coordinates)
     board.show()
 
 # board.set_random_obstacles(0.5)
