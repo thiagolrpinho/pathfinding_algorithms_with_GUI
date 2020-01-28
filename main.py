@@ -23,7 +23,8 @@ IMAGE_ICON_LIST_NAMES = [
 TOTAL_NUMBER_OF_BUTTONS = len(IMAGE_ICON_LIST_NAMES)
 BUTTON_AREA_LENGTH = int(
     (CANVAS_DIMENSION-SQUARE_SIZE)/TOTAL_NUMBER_OF_BUTTONS)
-BUTTON_SIZE = BUTTON_AREA_LENGTH - 1
+BUTTON_LENGTH = int(9/10 * BUTTON_AREA_LENGTH)
+BUTTON_AREA_HEIGTH = int(MENU_BAR_HEIGHT/2)
 
 # PATHS
 ICONS_FOLDER_PATH = "assets/icons/"
@@ -53,15 +54,21 @@ def capture_click_position() -> (int, int):
 
 
 def draw_menu_bar(menu_choices) -> None:
+    ''' Function draws icons on the menu bar'''
     surface = pygame.display.get_surface()
-    number_of_choices = len(menu_choices)
     for i, icon_name in enumerate(IMAGE_ICON_LIST_NAMES):
-        print(icon_name)
+        # For each icon we load it's image
         icon = pygame.image.load(os.path.join(ICONS_FOLDER_PATH + icon_name))
         icon.convert()
-        surface.blit(pygame.transform.scale(
-            icon, (BUTTON_AREA_LENGTH, 2*SQUARE_SIZE)),
-            (int(SQUARE_SIZE/2)+i*BUTTON_AREA_LENGTH, int(SQUARE_SIZE/2)))
+        # Then we rescale it to the current size
+        rescaled_icon = pygame.transform.scale(
+            icon, (BUTTON_LENGTH, BUTTON_AREA_HEIGTH))
+        # We calculate where to draw it
+        coordinate_to_draw_on = (
+            int(BUTTON_AREA_LENGTH/2)+i*BUTTON_AREA_LENGTH,
+            int(BUTTON_AREA_HEIGTH/2))
+        # And then draw the icon in the correct coordinate
+        surface.blit(rescaled_icon, coordinate_to_draw_on)
         pygame.display.flip()
 
 
