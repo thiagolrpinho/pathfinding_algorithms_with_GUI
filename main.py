@@ -21,8 +21,9 @@ IMAGE_ICON_LIST_NAMES = [
 
 # UI related sizes
 TOTAL_NUMBER_OF_BUTTONS = len(IMAGE_ICON_LIST_NAMES)
+MENU_BAR_CORNER_SIZE = 10
 BUTTON_AREA_LENGTH = int(
-    (CANVAS_DIMENSION-SQUARE_SIZE)/TOTAL_NUMBER_OF_BUTTONS)
+    (CANVAS_DIMENSION)/TOTAL_NUMBER_OF_BUTTONS)
 BUTTON_LENGTH = int(9/10 * BUTTON_AREA_LENGTH)
 BUTTON_AREA_HEIGTH = int(MENU_BAR_HEIGHT/2)
 
@@ -65,7 +66,7 @@ def draw_menu_bar(menu_choices) -> None:
             icon, (BUTTON_LENGTH, BUTTON_AREA_HEIGTH))
         # We calculate where to draw it
         coordinate_to_draw_on = (
-            int(BUTTON_AREA_LENGTH/2)+i*BUTTON_AREA_LENGTH,
+            i*BUTTON_AREA_LENGTH,
             int(BUTTON_AREA_HEIGTH/2))
         # And then draw the icon in the correct coordinate
         surface.blit(rescaled_icon, coordinate_to_draw_on)
@@ -94,8 +95,64 @@ pygame_window = pygame.display.set_mode(
 draw_menu_bar(available_algorithms)
 board = Board(pygame, BOARD_DIMENSION)
 
-
 board.show()
+
+should_play = setting_start = setting_goal = False
+choosen_algorithm = choosen_obstacles = None
+
+while not should_play:
+    # get all events
+    ev = pygame.event.get()
+    # proceed events
+    for event in ev:
+        if event.type == pygame.MOUSEBUTTONUP:
+            ''' We are only interested in mouse clicks events '''
+            pos = pygame.mouse.get_pos()
+            pos = pos[::-1]
+            ''' There are two types of clicks'''
+            ''' on the board or on the menu bar '''
+            if pos[0] <= MENU_BAR_HEIGHT:
+                ''' On menu bar '''
+                if pos[0] >= int(BUTTON_AREA_HEIGTH/2) and\
+                        pos[0] <= MENU_BAR_HEIGHT - int(BUTTON_AREA_HEIGTH/2):
+                    ''' If it's on an icon height '''
+                    icon_choice = int(
+                        pos[1]/(BUTTON_AREA_LENGTH))
+                    ''' We then calculate which button was choosen '''
+                    if icon_choice < 4:
+                        ''' Pathfinding algorithms buttons '''
+                        choosen_algorithm = icon_choice
+                        print(choosen_algorithm)
+                    elif icon_choice < 7:
+                        ''' Obstacles algorithms buttons '''
+                        choosen_obstacles = icon_choice - 4
+                        print(choosen_obstacles)
+                    elif icon_choice < 11:
+                        if icon_choice == 7:
+                            print("Setting start")
+                            ''' Set start button '''
+                            setting_goal = False
+                            setting_start = True
+                        elif icon_choice == 8:
+                            print("Setting goal")
+                            ''' Set goal button '''
+                            setting_goal = True
+                            setting_start = False
+                        elif icon_choice == 9:
+                            ''' Play button '''
+                            should_play = True
+            else:
+                ''' If the click was on the board '''
+                coordinates = (
+                    int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
+                    int(pos[1]/SQUARE_SIZE))
+                if setting_start:
+                    board.set_start(coordinates)
+                elif setting_goal:
+                    board.set_end(coordinates)
+    board.show()
+
+
 
 # Choose which algorithm will run
 coordinates = capture_click_position()
