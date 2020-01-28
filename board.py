@@ -82,7 +82,7 @@ class Node():
     def set_special(self, is_special: bool) -> None:
         ''' Set a node as special, it's color
             can't be changed '''
-        self.special = True
+        self.special = is_special
 
 
 class Board():
@@ -92,6 +92,7 @@ class Board():
         def __init__(self, pygame, dimension: int) -> None:
             self.pygame = pygame
             weight, height = dimension, dimension
+            self.start_node = None
             self.end_node = []
             self.grid = [
                 [Node(
@@ -100,6 +101,7 @@ class Board():
                 for y in range(height)]
             self.add_adjacent_neighbours()
             self.add_diagonal_neighbours()
+            
 
         def show(self):
             ''' Prints all board nodes on canvas '''
@@ -110,14 +112,29 @@ class Board():
 
         def set_start(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates
-                as the start node'''
-            self.start_node = self.get_node_at(coordinates)
-            self.start_node.set_colour(POWDERBLUE_COLOUR)
-            self.start_node.set_special(True)
-            self.start_node.set_obstacle(False)
+                as the start node.
+                If other node was already the start, the old
+                start node becomes a normal node.'''
+            if not self.start_node:
+                self.start_node = self.get_node_at(coordinates)
+                self.start_node.set_colour(POWDERBLUE_COLOUR)
+                self.start_node.set_special(True)
+                self.start_node.set_obstacle(False)
+            else:
+                self.remove_start_node()
+                self.start_node = self.get_node_at(coordinates)
+                self.start_node.set_colour(POWDERBLUE_COLOUR)
+                self.start_node.set_special(True)
+                self.start_node.set_obstacle(False)
+
+        def remove_start_node(self) -> None:
+            ''' Changes the start node to a normal node again '''
+            self.start_node.set_special(False)
+            self.start_node.set_colour(WHITE_COLOUR)
+            self.start_node = None
 
         def set_end(self, coordinates: (int, int)) -> None:
-            ''' Configure the node at given coordinates as the end node '''
+            ''' Add the node at given coordinates as an goal node '''
             node = self.get_node_at(coordinates)
             node.set_colour(ORANGE_COLOUR)
             node.set_special(True)
