@@ -20,7 +20,6 @@ NODE_SIZE = SQUARE_SIZE - 1
 OBSTACLES_RATIO = 0.3
 
 
-
 # Time
 TIME_TICK = 0.01
 
@@ -101,7 +100,6 @@ class Board():
                 for y in range(height)]
             self.add_adjacent_neighbours()
             self.add_diagonal_neighbours()
-            
 
         def show(self):
             ''' Prints all board nodes on canvas '''
@@ -138,7 +136,7 @@ class Board():
             self.start_node = None
 
         def add_goal(self, coordinates: (int, int)) -> None:
-            ''' Add the node at given coordinates as an goal node 
+            ''' Add the node at given coordinates as an goal node
             if it's not already an special node(like a start node)'''
             node = self.get_node_at(coordinates)
             if not node.special:
@@ -146,7 +144,9 @@ class Board():
                 node.set_special(True)
                 node.set_obstacle(False)
                 self.goal_nodes.append(node)
-        
+            elif node in self.goal_nodes:
+                self.remove_goal(coordinates)
+
         def remove_goal(self, coordinates: (int, int)) -> None:
             removed_goal_index = None
             for i, goal in enumerate(self.goal_nodes):
@@ -156,8 +156,7 @@ class Board():
                     removed_goal_index = i
                     break
             if removed_goal_index is not None:
-                self.goal_nodes.remove(removed_goal_index)
-
+                del self.goal_nodes[removed_goal_index]
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all nodes in grid '''
@@ -206,7 +205,6 @@ class Board():
         def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
             x_length = len(self.grid)
             y_length = len(self.grid[0])
-            base = 0
             for i in range(x_length):
                 for j in range(y_length):
                     if (noise.snoise2(
