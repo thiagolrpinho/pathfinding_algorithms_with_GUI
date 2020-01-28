@@ -2,9 +2,11 @@
 Used to show graphic interface.
 '''
 import pygame
+import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
-    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR
+    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR,\
+    BUTTON_AREA_SIZE, BUTTON_SIZE, TOTAL_NUMBER_OF_BUTTONS
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -34,12 +36,33 @@ def capture_click_position() -> (int, int):
     return coordinates
 
 
+def draw_menu_bar(menu_choices) -> None:
+    i = 0
+    surface = pygame.display.get_surface()
+    number_of_choices = len(menu_choices)
+    player = pygame.image.load(os.path.join("assets/icons/1_created_by_roundicons.png"))
+    player.convert()
+    for key in menu_choices:
+        available_algorithms[key].append(((i)*BUTTON_AREA_SIZE, 5))
+        surface.blit(pygame.transform.scale(
+            player, (BUTTON_SIZE, BUTTON_SIZE)),
+            (int(SQUARE_SIZE/2)+i*BUTTON_AREA_SIZE, int(SQUARE_SIZE/2)))
+        pygame.display.flip()
+        i += 1
+
+
 available_algorithms = {
-                "AST": ["a_star_pathfind"],
-                "DIJ": ["dijkstras_pathfinding"],
-                "DFS": ["shortest_path_dfs"],
-                "BFS": ["shortest_path_bfs"]
-                }
+    "AST": ["a_star_pathfind"],
+    "DIJ": ["dijkstras_pathfinding"],
+    "DFS": ["shortest_path_dfs"],
+    "BFS": ["shortest_path_bfs"],
+    "RNG": ["set_random_obstacles"],
+    "PRL": ["set_perlin_noise_obstacles"],
+    "MNL": [""],
+    "START": ["set_start"],
+    "GOAL": ["set_end"],
+    "EXIT": [""]
+}
 
 
 start_time = time()
@@ -49,16 +72,7 @@ pygame_window = pygame.display.set_mode(
     (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
 board = Board(pygame, BOARD_DIMENSION)
 
-i = 0
-for key in available_algorithms:
-    available_algorithms[key].append(((i+1)*75, 5))
-    pygame.draw.rect(
-        pygame.display.get_surface(),
-        WHITE_COLOUR,
-        pygame.Rect(
-            (i+1)*(100), 5,
-            90, 30))
-    i += 1
+draw_menu_bar(available_algorithms)
 
 board.show()
 
