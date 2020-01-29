@@ -5,7 +5,8 @@ import pygame
 import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
-    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR, BLACK_COLOUR
+    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
+        WHITE_COLOUR, BLACK_COLOUR, RED_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -32,6 +33,7 @@ ICONS_FOLDER_PATH = "assets/icons/"
 
 # PYGAME RELATED GLOBALS CONSTANT
 pygame.init()
+CLOCK = pygame.time.Clock()
 pygame.display.set_mode(
     (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
 SURFACE = pygame.display.get_surface()
@@ -82,47 +84,57 @@ def icon_click(
         icon_choice: int,
         icon_flags: dict) -> dict:
     ''' Receives an icon_choice and a dict with the actual states
-        of the icon choosen and returns the new states. '''
+        of the icon chosen and returns the new states. '''
     if icon_choice < 4:
         ''' Pathfinding algorithms buttons '''
-        erase_border_icon(icon_flags['pathfind'])
+        erase_icon_border(icon_flags['pathfind'])
         icon_flags['pathfind'] = icon_choice
-        draw_border_icon(icon_choice)
+        draw_icon_border(icon_choice)
     elif icon_choice < 7:
         ''' Obstacles algorithms buttons '''
-        erase_border_icon(icon_flags['obstacles'] + 4)
+        erase_icon_border(icon_flags['obstacles'] + 4)
         icon_flags['obstacles'] = icon_choice - 4
-        draw_border_icon(icon_choice)
+        draw_icon_border(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
             print("Setting start")
             ''' Set start button '''
             icon_flags['goal'] = False
-            erase_border_icon(8)
+            erase_icon_border(8)
             icon_flags['start'] = True
         elif icon_choice == 8:
             print("Setting goal")
             ''' Set goal button '''
             icon_flags['start'] = False
-            erase_border_icon(7)
+            erase_icon_border(7)
             icon_flags['goal'] = True
         elif icon_choice == 9:
             ''' Play button '''
             icon_flags['play'] = True
-    draw_border_icon(icon_choice)
+    draw_icon_border(icon_choice)
     return icon_flags
 
 
-def draw_border_icon(icon_choice: int) -> None:
-    '''Receives the index of the choosen icon
+def draw_icon_border(icon_choice: int) -> None:
+    '''Receives the index of the chosen icon
         and draws around it a red rectangle border'''
-    pygame.draw.rect(SURFACE, (255, 0, 0), [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
+    start_x = icon_choice*BUTTON_AREA_LENGTH
+    start_y = int(BUTTON_AREA_HEIGTH/2)
+    x_length = BUTTON_AREA_LENGTH
+    y_length = BUTTON_AREA_HEIGTH
+    rectangle = [start_x, start_y, x_length, y_length]
+    pygame.draw.rect(SURFACE, RED_COLOUR, rectangle, 2)
 
 
-def erase_border_icon(icon_choice: int) -> None:
-    ''' Receives the index of one choosen icon
+def erase_icon_border(icon_choice: int) -> None:
+    ''' Receives the index of one chosen icon
         and erasesthe border around it'''
-    pygame.draw.rect(SURFACE, BLACK_COLOUR, [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
+    start_x = icon_choice*BUTTON_AREA_LENGTH
+    start_y = int(BUTTON_AREA_HEIGTH/2)
+    x_length = BUTTON_AREA_LENGTH
+    y_length = BUTTON_AREA_HEIGTH
+    rectangle = [start_x, start_y, x_length, y_length]
+    pygame.draw.rect(SURFACE, BLACK_COLOUR, rectangle, 2)
 
 
 available_algorithms = {
@@ -156,6 +168,10 @@ board = Board(pygame, BOARD_DIMENSION)
 board.show()
 
 while not icon_flags['play']:
+    # This limits the while loop to a max of 10 times per second.
+    # Leave this out and we will use all CPU we can.
+    CLOCK.tick(10)
+
     # get all events
     ev = pygame.event.get()
     # proceed events
@@ -173,7 +189,7 @@ while not icon_flags['play']:
                     ''' If it's on an icon height '''
                     icon_choice = int(
                         pos[1]/(BUTTON_AREA_LENGTH))
-                    ''' We then calculate which button was choosen '''
+                    ''' We then calculate which button was chosen '''
                     icon_flags = icon_click(icon_choice, icon_flags)
             else:
                 ''' If the click was on the board '''
@@ -193,15 +209,15 @@ coordinates = capture_click_position()
 # Need to refactor here so it can be better modularized
 # Need to refactor BFS, it's not working somehow
 if coordinates[1] == 1:
-    choosen_algorithm = available_algorithms['AST'][0]
+    chosen_algorithm = available_algorithms['AST'][0]
 elif coordinates[1] == 2:
-    choosen_algorithm = available_algorithms['DIJ'][0]
+    chosen_algorithm = available_algorithms['DIJ'][0]
 elif coordinates[1] == 3:
-    choosen_algorithm = available_algorithms['DFS'][0]
+    chosen_algorithm = available_algorithms['DFS'][0]
 elif coordinates[1] == 4:
-    choosen_algorithm = available_algorithms['BFS'][0]
+    chosen_algorithm = available_algorithms['BFS'][0]
 
-print(choosen_algorithm)
+print(chosen_algorithm)
 
 coordinates = capture_click_position()
 board.set_start(coordinates)
@@ -217,7 +233,7 @@ board.set_perlin_noise_obstacles(0.3)
 path = []
 partial_start = board.start_node
 for goal in board.end_node:
-    path_found = eval(choosen_algorithm+"(partial_start, goal)")
+    path_found = eval(chosen_algorithm+"(partial_start, goal)")
     if not path_found:
         path = []
         break
