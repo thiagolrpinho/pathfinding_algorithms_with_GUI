@@ -6,7 +6,7 @@ import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
     SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
-        WHITE_COLOUR, BLACK_COLOUR, RED_COLOUR
+    WHITE_COLOUR, BLACK_COLOUR, RED_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -33,10 +33,13 @@ ICONS_FOLDER_PATH = "assets/icons/"
 
 # PYGAME RELATED GLOBALS CONSTANT
 pygame.init()
-CLOCK = pygame.time.Clock()
 pygame.display.set_mode(
     (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
+CLOCK = pygame.time.Clock()
+FRAMES_PER_SECOND = 10
+WAIT_TIME_MILISECONDS = 300
 SURFACE = pygame.display.get_surface()
+
 
 def capture_click_position() -> (int, int):
     ''' Waits for a click and returns the position
@@ -98,12 +101,12 @@ def icon_click(
         if icon_flags['obstacles'] == 1:
             board.set_random_obstacles(OBSTACLES_RATIO)
             board.show()
-            pygame.time.wait(300)
+            pygame.time.wait(WAIT_TIME_MILISECONDS)
             erase_icon_border(icon_choice)
         elif icon_flags['obstacles'] == 2:
             board.set_perlin_noise_obstacles(OBSTACLES_RATIO)
             board.show()
-            pygame.time.wait(300)
+            pygame.time.wait(WAIT_TIME_MILISECONDS)
             erase_icon_border(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
@@ -126,13 +129,29 @@ def icon_click(
                 erase_icon_border(icon_choice)
         elif icon_choice == 9:
             ''' Play button '''
-            icon_flags['play'] = True
+            draw_icon_border(icon_choice)
+            if board.start_node and board.goal_nodes:
+                chosen_algorithm = available_algorithms[icon_flags['pathfind']]
+                path = []
+                partial_start = board.start_node
+                for goal in board.goal_nodes:
+                    path_found = eval(chosen_algorithm+"(partial_start, goal)")
+                    if not path_found:
+                        path = []
+                        break
+                    path = path_found + path
+                    partial_start = goal
+
+                if not path:
+                    print("No Path available")
+                else:
+                    show_path(path)
         elif icon_choice == 10:
             ''' Restart button '''
             draw_icon_border(icon_choice)
             board.clear()
             board.show()
-            pygame.time.wait(300)
+            pygame.time.wait(WAIT_TIME_MILISECONDS)
             erase_icon_border(icon_choice)
     return icon_flags
 
@@ -159,18 +178,12 @@ def erase_icon_border(icon_choice: int) -> None:
     pygame.draw.rect(SURFACE, BLACK_COLOUR, rectangle, 2)
 
 
-available_algorithms = {
-    "AST": ["a_star_pathfind"],
-    "DIJ": ["dijkstras_pathfinding"],
-    "DFS": ["shortest_path_dfs"],
-    "BFS": ["shortest_path_bfs"],
-    "RNG": ["set_random_obstacles"],
-    "PRL": ["set_perlin_noise_obstacles"],
-    "MNL": [""],
-    "START": ["set_start"],
-    "GOAL": ["add_goal"],
-    "EXIT": [""]
-}
+available_algorithms = [
+    "a_star_pathfind",
+    "dijkstras_pathfinding",
+    "shortest_path_dfs",
+    "shortest_path_bfs",
+]
 
 
 icon_flags = {
@@ -192,7 +205,7 @@ board.show()
 while not icon_flags['play']:
     # This limits the while loop to a max of 10 times per second.
     # Leave this out and we will use all CPU we can.
-    CLOCK.tick(10)
+    CLOCK.tick(FRAMES_PER_SECOND)
 
     # get all events
     ev = pygame.event.get()
@@ -254,20 +267,7 @@ for _ in range(2):
 # board.set_random_obstacles(0.5)
 board.set_perlin_noise_obstacles(0.3)
 
-path = []
-partial_start = board.start_node
-for goal in board.end_node:
-    path_found = eval(chosen_algorithm+"(partial_start, goal)")
-    if not path_found:
-        path = []
-        break
-    path = path_found + path
-    partial_start = goal
 
-if not path:
-    print("No Path available")
-else:
-    show_path(path)
 
 board.show()
 print("Time to find path: ", time() - start_time, " seconds")

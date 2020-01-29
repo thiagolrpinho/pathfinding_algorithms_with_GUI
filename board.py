@@ -150,15 +150,26 @@ class Board():
                 self.remove_goal(coordinates)
 
         def remove_goal(self, coordinates: (int, int)) -> None:
+            ''' Remove given goal coordinate from goal nodes 
+                making it a normal square '''
             removed_goal_index = None
+            removed_node = self.get_node_at(coordinates)
             for i, goal in enumerate(self.goal_nodes):
-                if coordinates == goal.get_coordinates():
+                if removed_node == goal:
                     goal.set_special(False)
                     goal.set_colour(WHITE_COLOUR)
                     removed_goal_index = i
                     break
             if removed_goal_index is not None:
                 del self.goal_nodes[removed_goal_index]
+
+        def clear_goals(self) -> None:
+            ''' Clear all goals from board making then
+                normal squares. '''
+            for goal in self.goal_nodes:
+                goal.set_special(False)
+                goal.set_colour(WHITE_COLOUR)
+            self.goal_nodes = None
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all nodes in grid '''
@@ -228,14 +239,14 @@ class Board():
         def clear(self) -> None:
             ''' Clear all the board squares. Like restarting it. '''
             self.remove_start_node()
-            for node in self.goal_nodes:
-                self.remove_goal(node.get_coordinates())
+            self.clear_goals()
 
             for column in self.grid:
                 for node in column:
                     if not node.traversable:
                         self.alternate_obstacle_at(node.get_coordinates())
-                    
+                    else:
+                        node.set_colour(WHITE_COLOUR)
     instance = None
 
     def __init__(self, pygame, dimension: int) -> None:
@@ -526,11 +537,11 @@ def show_board(open_set, closed_list) -> None:
     board = Board(0, 0)
     for node in open_set:
         if board.start_node != node and\
-                board.end_node != node:
+                node not in board.goal_nodes:
             node.set_colour(GREENYELLOW_COLOUR)
     for node in closed_list:
         if board.start_node != node and\
-                board.end_node != node:
+                node not in board.goal_nodes:
             node.set_colour(DARKSEAGREEN_COLOUR)
 
     board.show()
