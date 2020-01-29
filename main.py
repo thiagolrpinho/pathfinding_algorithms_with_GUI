@@ -101,7 +101,14 @@ def icon_click(
         elif icon_choice == 9:
             ''' Play button '''
             icon_flags['play'] = True
+    draw_border_icon(icon_choice)
     return icon_flags
+
+
+def draw_border_icon(icon_choice: int) -> None:
+    '''Receives the icon_number of the choosen icon
+        and draws around it a red rectangle border'''
+    pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0), [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
 
 
 available_algorithms = {
@@ -136,7 +143,6 @@ board.show()
 
 should_play = setting_start = setting_goal = False
 choosen_algorithm = choosen_obstacles = None
-
 while not icon_flags['play']:
     # get all events
     ev = pygame.event.get()
