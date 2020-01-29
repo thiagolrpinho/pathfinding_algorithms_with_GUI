@@ -23,6 +23,13 @@ OBSTACLES_RATIO = 0.3
 # Time
 TIME_TICK = 0.01
 
+# Algorithms related constants
+AVAILABLE_ALGORITHMS = [
+    "a_star_pathfind",
+    "dijkstras_pathfinding",
+    "shortest_path_dfs",
+    "shortest_path_bfs",
+]
 
 TNode = TypeVar("TNode", bound="Node")
 

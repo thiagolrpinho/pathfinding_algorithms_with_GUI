@@ -6,7 +6,7 @@ import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
     SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
-    BLACK_COLOUR, RED_COLOUR
+    BLACK_COLOUR, RED_COLOUR, AVAILABLE_ALGORITHMS
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -162,7 +162,7 @@ def icon_click(
         elif icon_choice == 9:
             ''' Play button '''
             draw_icon_border(icon_choice)
-            chosen_algorithm = available_algorithms[icon_flags['pathfind']]
+            chosen_algorithm = AVAILABLE_ALGORITHMS[icon_flags['pathfind']]
             run_pathfind_algorithm(chosen_algorithm)
             erase_icon_border(icon_choice)
         elif icon_choice == 10:
@@ -199,15 +199,6 @@ def erase_icon_border(icon_choice: int) -> None:
     rectangle = [start_x, start_y, x_length, y_length]
     pygame.draw.rect(SURFACE, BLACK_COLOUR, rectangle, 2)
 
-
-available_algorithms = [
-    "a_star_pathfind",
-    "dijkstras_pathfinding",
-    "shortest_path_dfs",
-    "shortest_path_bfs",
-]
-
-
 icon_flags = {
     "play": False,
     "start": False,
@@ -218,9 +209,7 @@ icon_flags = {
 }
 
 start_time = time()
-
-
-draw_menu_bar(available_algorithms)
+draw_menu_bar(AVAILABLE_ALGORITHMS)
 board = Board(pygame, BOARD_DIMENSION)
 
 board.show()
@@ -266,5 +255,5 @@ while not icon_flags['finish']:
                     board.alternate_obstacle_at(coordinate)
     board.show()
 
-print("Time to find path: ", time() - start_time, " seconds")
+print("Time running app: ", time() - start_time, " seconds")
 pygame.quit()
