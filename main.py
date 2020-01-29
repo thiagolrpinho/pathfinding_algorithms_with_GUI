@@ -95,6 +95,16 @@ def icon_click(
         erase_icon_border(icon_flags['obstacles'] + 4)
         icon_flags['obstacles'] = icon_choice - 4
         draw_icon_border(icon_choice)
+        if icon_flags['obstacles'] == 1:
+            board.set_random_obstacles(OBSTACLES_RATIO)
+            board.show()
+            pygame.time.wait(500)
+            erase_icon_border(icon_choice)
+        elif icon_flags['obstacles'] == 2:
+            board.set_perlin_noise_obstacles(OBSTACLES_RATIO)
+            board.show()
+            pygame.time.wait(500)
+            erase_icon_border(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
             ''' Alternate start button '''
@@ -117,16 +127,19 @@ def icon_click(
         elif icon_choice == 9:
             ''' Play button '''
             icon_flags['play'] = True
+        elif icon_choice == 10:
+            ''' Restart button '''
+            board.clear()
     return icon_flags
 
 
 def draw_icon_border(icon_choice: int) -> None:
     '''Receives the index of the chosen icon
         and draws around it a red rectangle border'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH
-    start_y = int(BUTTON_AREA_HEIGTH/2)
-    x_length = BUTTON_AREA_LENGTH
-    y_length = BUTTON_AREA_HEIGTH
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 5
+    start_y = int(BUTTON_AREA_HEIGTH/2) - 5
+    x_length = BUTTON_AREA_LENGTH + 5
+    y_length = BUTTON_AREA_HEIGTH + 10
     rectangle = [start_x, start_y, x_length, y_length]
     pygame.draw.rect(SURFACE, RED_COLOUR, rectangle, 2)
 
@@ -134,10 +147,10 @@ def draw_icon_border(icon_choice: int) -> None:
 def erase_icon_border(icon_choice: int) -> None:
     ''' Receives the index of one chosen icon
         and erasesthe border around it'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH
-    start_y = int(BUTTON_AREA_HEIGTH/2)
-    x_length = BUTTON_AREA_LENGTH
-    y_length = BUTTON_AREA_HEIGTH
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 5
+    start_y = int(BUTTON_AREA_HEIGTH/2) - 5
+    x_length = BUTTON_AREA_LENGTH + 5
+    y_length = BUTTON_AREA_HEIGTH + 10
     rectangle = [start_x, start_y, x_length, y_length]
     pygame.draw.rect(SURFACE, BLACK_COLOUR, rectangle, 2)
 

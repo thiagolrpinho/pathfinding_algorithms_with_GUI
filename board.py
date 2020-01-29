@@ -131,6 +131,8 @@ class Board():
 
         def remove_start_node(self) -> None:
             ''' Changes the start node to a normal node again '''
+            if not self.start_node:
+                return None
             self.start_node.set_special(False)
             self.start_node.set_colour(WHITE_COLOUR)
             self.start_node = None
@@ -223,6 +225,17 @@ class Board():
                 node = None
             return node
 
+        def clear(self) -> None:
+            ''' Clear all the board squares. Like restarting it. '''
+            self.remove_start_node()
+            for node in self.goal_nodes:
+                self.remove_goal(node.get_coordinates())
+
+            for column in self.grid:
+                for node in column:
+                    if not node.traversable:
+                        self.alternate_obstacle_at(node.get_coordinates())
+                    
     instance = None
 
     def __init__(self, pygame, dimension: int) -> None:
