@@ -97,21 +97,26 @@ def icon_click(
         draw_icon_border(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
-            print("Setting start")
-            ''' Set start button '''
+            ''' Alternate start button '''
             icon_flags['goal'] = False
             erase_icon_border(8)
-            icon_flags['start'] = True
+            icon_flags['start'] = not icon_flags['start']
+            if icon_flags['start']:
+                draw_icon_border(icon_choice)
+            else:
+                erase_icon_border(icon_choice)
         elif icon_choice == 8:
-            print("Setting goal")
-            ''' Set goal button '''
+            ''' Alternate goal button '''
             icon_flags['start'] = False
             erase_icon_border(7)
-            icon_flags['goal'] = True
+            icon_flags['goal'] = not icon_flags['goal']
+            if icon_flags['goal']:
+                draw_icon_border(icon_choice)
+            else:
+                erase_icon_border(icon_choice)
         elif icon_choice == 9:
             ''' Play button '''
             icon_flags['play'] = True
-    draw_icon_border(icon_choice)
     return icon_flags
 
 
@@ -193,13 +198,15 @@ while not icon_flags['play']:
                     icon_flags = icon_click(icon_choice, icon_flags)
             else:
                 ''' If the click was on the board '''
-                coordinates = (
+                coordinate = (
                     int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
                     int(pos[1]/SQUARE_SIZE))
                 if icon_flags['start']:
-                    board.set_start(coordinates)
+                    board.set_start(coordinate)
                 elif icon_flags['goal']:
-                    board.add_goal(coordinates)
+                    board.add_goal(coordinate)
+                elif icon_flags['obstacles'] == 0:
+                    board.alternate_obstacle_at(coordinate)
     board.show()
 
 
