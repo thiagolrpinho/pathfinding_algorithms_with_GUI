@@ -30,6 +30,7 @@ BUTTON_AREA_HEIGTH = int(MENU_BAR_HEIGHT/2)
 # PATHS
 ICONS_FOLDER_PATH = "assets/icons/"
 
+
 def capture_click_position() -> (int, int):
     ''' Waits for a click and returns the position
         on the board that it was make '''
@@ -73,6 +74,36 @@ def draw_menu_bar(menu_choices) -> None:
         pygame.display.flip()
 
 
+def icon_click(
+        icon_choice: int,
+        icon_flags: dict) -> dict:
+    ''' Receives an icon_choice and a dict with the actual states
+        of the icon choosen and returns the new states. '''
+    if icon_choice < 4:
+        ''' Pathfinding algorithms buttons '''
+        choosen_algorithm = icon_choice
+        print(choosen_algorithm)
+    elif icon_choice < 7:
+        ''' Obstacles algorithms buttons '''
+        choosen_obstacles = icon_choice - 4
+        print(choosen_obstacles)
+    elif icon_choice < 11:
+        if icon_choice == 7:
+            print("Setting start")
+            ''' Set start button '''
+            icon_flags['goal'] = False
+            icon_flags['start'] = True
+        elif icon_choice == 8:
+            print("Setting goal")
+            ''' Set goal button '''
+            icon_flags['goal'] = True
+            icon_flags['start'] = False
+        elif icon_choice == 9:
+            ''' Play button '''
+            icon_flags['play'] = True
+    return icon_flags
+
+
 available_algorithms = {
     "AST": ["a_star_pathfind"],
     "DIJ": ["dijkstras_pathfinding"],
@@ -87,6 +118,12 @@ available_algorithms = {
 }
 
 
+icon_flags = {
+    "play": False,
+    "start": False,
+    "goal": False
+}
+
 start_time = time()
 pygame.init()
 
@@ -100,7 +137,7 @@ board.show()
 should_play = setting_start = setting_goal = False
 choosen_algorithm = choosen_obstacles = None
 
-while not should_play:
+while not icon_flags['play']:
     # get all events
     ev = pygame.event.get()
     # proceed events
@@ -119,39 +156,17 @@ while not should_play:
                     icon_choice = int(
                         pos[1]/(BUTTON_AREA_LENGTH))
                     ''' We then calculate which button was choosen '''
-                    if icon_choice < 4:
-                        ''' Pathfinding algorithms buttons '''
-                        choosen_algorithm = icon_choice
-                        print(choosen_algorithm)
-                    elif icon_choice < 7:
-                        ''' Obstacles algorithms buttons '''
-                        choosen_obstacles = icon_choice - 4
-                        print(choosen_obstacles)
-                    elif icon_choice < 11:
-                        if icon_choice == 7:
-                            print("Setting start")
-                            ''' Set start button '''
-                            setting_goal = False
-                            setting_start = True
-                        elif icon_choice == 8:
-                            print("Setting goal")
-                            ''' Set goal button '''
-                            setting_goal = True
-                            setting_start = False
-                        elif icon_choice == 9:
-                            ''' Play button '''
-                            should_play = True
+                    icon_flags = icon_click(icon_choice, icon_flags)
             else:
                 ''' If the click was on the board '''
                 coordinates = (
                     int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
                     int(pos[1]/SQUARE_SIZE))
-                if setting_start:
+                if icon_flags['start']:
                     board.set_start(coordinates)
-                elif setting_goal:
+                elif icon_flags['goal']:
                     board.add_goal(coordinates)
     board.show()
-
 
 
 # Choose which algorithm will run
