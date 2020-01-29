@@ -5,7 +5,7 @@ import pygame
 import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
-    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR
+    SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT, WHITE_COLOUR, BLACK_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -30,6 +30,11 @@ BUTTON_AREA_HEIGTH = int(MENU_BAR_HEIGHT/2)
 # PATHS
 ICONS_FOLDER_PATH = "assets/icons/"
 
+# PYGAME RELATED GLOBALS CONSTANT
+pygame.init()
+pygame.display.set_mode(
+    (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
+SURFACE = pygame.display.get_surface()
 
 def capture_click_position() -> (int, int):
     ''' Waits for a click and returns the position
@@ -57,7 +62,6 @@ def capture_click_position() -> (int, int):
 
 def draw_menu_bar(menu_choices) -> None:
     ''' Function draws icons on the menu bar'''
-    surface = pygame.display.get_surface()
     for i, icon_name in enumerate(IMAGE_ICON_LIST_NAMES):
         # For each icon we load it's image
         icon = pygame.image.load(os.path.join(ICONS_FOLDER_PATH + icon_name))
@@ -70,7 +74,7 @@ def draw_menu_bar(menu_choices) -> None:
             i*BUTTON_AREA_LENGTH,
             int(BUTTON_AREA_HEIGTH/2))
         # And then draw the icon in the correct coordinate
-        surface.blit(rescaled_icon, coordinate_to_draw_on)
+        SURFACE.blit(rescaled_icon, coordinate_to_draw_on)
         pygame.display.flip()
 
 
@@ -92,12 +96,14 @@ def icon_click(
             print("Setting start")
             ''' Set start button '''
             icon_flags['goal'] = False
+            erase_border_icon(8)
             icon_flags['start'] = True
         elif icon_choice == 8:
             print("Setting goal")
             ''' Set goal button '''
-            icon_flags['goal'] = True
             icon_flags['start'] = False
+            erase_border_icon(7)
+            icon_flags['goal'] = True
         elif icon_choice == 9:
             ''' Play button '''
             icon_flags['play'] = True
@@ -106,9 +112,15 @@ def icon_click(
 
 
 def draw_border_icon(icon_choice: int) -> None:
-    '''Receives the icon_number of the choosen icon
+    '''Receives the index of the choosen icon
         and draws around it a red rectangle border'''
-    pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0), [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
+    pygame.draw.rect(SURFACE, (255, 0, 0), [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
+
+
+def erase_border_icon(icon_choice: int) -> None:
+    ''' Receives the index of one choosen icon
+        and erasesthe border around it'''
+    pygame.draw.rect(SURFACE, BLACK_COLOUR, [icon_choice*BUTTON_AREA_LENGTH, int(BUTTON_AREA_HEIGTH/2), BUTTON_AREA_LENGTH, BUTTON_AREA_HEIGTH], 2)
 
 
 available_algorithms = {
@@ -132,10 +144,8 @@ icon_flags = {
 }
 
 start_time = time()
-pygame.init()
 
-pygame_window = pygame.display.set_mode(
-    (CANVAS_DIMENSION, CANVAS_DIMENSION + MENU_BAR_HEIGHT))
+
 draw_menu_bar(available_algorithms)
 board = Board(pygame, BOARD_DIMENSION)
 
