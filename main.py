@@ -98,12 +98,12 @@ def icon_click(
         if icon_flags['obstacles'] == 1:
             board.set_random_obstacles(OBSTACLES_RATIO)
             board.show()
-            pygame.time.wait(500)
+            pygame.time.wait(300)
             erase_icon_border(icon_choice)
         elif icon_flags['obstacles'] == 2:
             board.set_perlin_noise_obstacles(OBSTACLES_RATIO)
             board.show()
-            pygame.time.wait(500)
+            pygame.time.wait(300)
             erase_icon_border(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
@@ -129,7 +129,11 @@ def icon_click(
             icon_flags['play'] = True
         elif icon_choice == 10:
             ''' Restart button '''
+            draw_icon_border(icon_choice)
             board.clear()
+            board.show()
+            pygame.time.wait(300)
+            erase_icon_border(icon_choice)
     return icon_flags
 
 
