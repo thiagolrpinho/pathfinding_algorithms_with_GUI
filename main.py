@@ -211,6 +211,8 @@ icon_flags = {
 start_time = time()
 draw_menu_bar(AVAILABLE_ALGORITHMS)
 board = Board(pygame, BOARD_DIMENSION)
+draw_icon_border(0)
+draw_icon_border(4)
 
 board.show()
 

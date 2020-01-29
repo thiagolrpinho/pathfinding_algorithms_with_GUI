@@ -13,7 +13,7 @@ DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 500
-BOARD_DIMENSION = 20
+BOARD_DIMENSION = 50
 SQUARE_SIZE = int(CANVAS_DIMENSION/BOARD_DIMENSION)
 MENU_BAR_HEIGHT = 100
 NODE_SIZE = SQUARE_SIZE - 1
@@ -173,12 +173,10 @@ class Board():
         def clear_goals(self) -> None:
             ''' Clear all goals from board making then
                 normal squares. '''
-            if self.goal_nodes is None:
-                return None
             for goal in self.goal_nodes:
                 goal.set_special(False)
                 goal.set_colour(WHITE_COLOUR)
-            self.goal_nodes = None
+            self.goal_nodes = []
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all nodes in grid '''
@@ -583,4 +581,4 @@ def show_path(path_list: List[TNode]) -> None:
         path_node = path_list.pop()
         path_node.set_colour(DARKGREEN_COLOUR)
         board.show()
-        sleep(TIME_TICK*10)
+        sleep(TIME_TICK*5)
