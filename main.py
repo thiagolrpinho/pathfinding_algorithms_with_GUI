@@ -6,7 +6,7 @@ import os
 from time import time
 from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
     SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
-    WHITE_COLOUR, BLACK_COLOUR, RED_COLOUR
+    BLACK_COLOUR, RED_COLOUR
 from board import Board, a_star_pathfind,\
     dijkstras_pathfinding, double_dijkstras_pathfinding,\
     shortest_path_dfs, shortest_path_bfs, show_path
@@ -83,6 +83,48 @@ def draw_menu_bar(menu_choices) -> None:
         pygame.display.flip()
 
 
+def show_wait_erase_icon_border(icon_choice: int) -> None:
+    ''' Shows board. Waits for WAIT_TIME_MILISECONDS
+        and then erase the border around the icon'''
+    board.show()
+    pygame.time.wait(WAIT_TIME_MILISECONDS)
+    erase_icon_border(icon_choice)
+
+
+def alternate_border_icon(icon_choice: int, should_draw: bool) -> None:
+    ''' Draws or erases given icon based on should draw argument.
+    '''
+    if should_draw:
+        draw_icon_border(icon_choice)
+    else:
+        erase_icon_border(icon_choice)
+
+
+def run_pathfind_algorithm(pathfind_algorithm: str) -> None:
+    ''' Executes the chosen pathfind algorithm and draws
+        on board the found path if any was found.
+    '''
+    if not board.start_node or not board.goal_nodes:
+        return None
+    path = []
+    partial_start = board.start_node
+    for goal in board.goal_nodes:
+        path_found = eval(pathfind_algorithm+"(partial_start, goal)")
+        if not path_found:
+            path = []
+            break
+        path = path_found + path
+        partial_start = goal
+
+    if not path:
+        print("No Path available")
+    else:
+        show_path(path)
+
+    pygame.time.wait(5*WAIT_TIME_MILISECONDS)
+    board.clear()
+
+
 def icon_click(
         icon_choice: int,
         icon_flags: dict) -> dict:
@@ -100,59 +142,39 @@ def icon_click(
         draw_icon_border(icon_choice)
         if icon_flags['obstacles'] == 1:
             board.set_random_obstacles(OBSTACLES_RATIO)
-            board.show()
-            pygame.time.wait(WAIT_TIME_MILISECONDS)
-            erase_icon_border(icon_choice)
+            show_wait_erase_icon_border(icon_choice)
         elif icon_flags['obstacles'] == 2:
             board.set_perlin_noise_obstacles(OBSTACLES_RATIO)
-            board.show()
-            pygame.time.wait(WAIT_TIME_MILISECONDS)
-            erase_icon_border(icon_choice)
-    elif icon_choice < 11:
+            show_wait_erase_icon_border(icon_choice)
+    elif icon_choice < 12:
         if icon_choice == 7:
             ''' Alternate start button '''
             icon_flags['goal'] = False
             erase_icon_border(8)
             icon_flags['start'] = not icon_flags['start']
-            if icon_flags['start']:
-                draw_icon_border(icon_choice)
-            else:
-                erase_icon_border(icon_choice)
+            alternate_border_icon(icon_choice, icon_flags['start'])
         elif icon_choice == 8:
             ''' Alternate goal button '''
             icon_flags['start'] = False
             erase_icon_border(7)
             icon_flags['goal'] = not icon_flags['goal']
-            if icon_flags['goal']:
-                draw_icon_border(icon_choice)
-            else:
-                erase_icon_border(icon_choice)
+            alternate_border_icon(icon_choice, icon_flags['goal'])
         elif icon_choice == 9:
             ''' Play button '''
             draw_icon_border(icon_choice)
-            if board.start_node and board.goal_nodes:
-                chosen_algorithm = available_algorithms[icon_flags['pathfind']]
-                path = []
-                partial_start = board.start_node
-                for goal in board.goal_nodes:
-                    path_found = eval(chosen_algorithm+"(partial_start, goal)")
-                    if not path_found:
-                        path = []
-                        break
-                    path = path_found + path
-                    partial_start = goal
-
-                if not path:
-                    print("No Path available")
-                else:
-                    show_path(path)
+            chosen_algorithm = available_algorithms[icon_flags['pathfind']]
+            run_pathfind_algorithm(chosen_algorithm)
+            erase_icon_border(icon_choice)
         elif icon_choice == 10:
             ''' Restart button '''
             draw_icon_border(icon_choice)
             board.clear()
-            board.show()
-            pygame.time.wait(WAIT_TIME_MILISECONDS)
-            erase_icon_border(icon_choice)
+            show_wait_erase_icon_border(icon_choice)
+        else:
+            ''' Close button '''
+            draw_icon_border(icon_choice)
+            show_wait_erase_icon_border(icon_choice)
+            icon_flags['finish'] = True
     return icon_flags
 
 
@@ -191,7 +213,8 @@ icon_flags = {
     "start": False,
     "goal": False,
     "pathfind": 0,
-    "obstacles": 0
+    "obstacles": 0,
+    "finish": False
 }
 
 start_time = time()
@@ -202,7 +225,7 @@ board = Board(pygame, BOARD_DIMENSION)
 
 board.show()
 
-while not icon_flags['play']:
+while not icon_flags['finish']:
     # This limits the while loop to a max of 10 times per second.
     # Leave this out and we will use all CPU we can.
     CLOCK.tick(FRAMES_PER_SECOND)
@@ -219,8 +242,12 @@ while not icon_flags['play']:
             ''' on the board or on the menu bar '''
             if pos[0] <= MENU_BAR_HEIGHT:
                 ''' On menu bar '''
-                if pos[0] >= int(BUTTON_AREA_HEIGTH/2) and\
-                        pos[0] <= MENU_BAR_HEIGHT - int(BUTTON_AREA_HEIGTH/2):
+                is_higher_than_start_icon_height =\
+                    pos[0] >= int(BUTTON_AREA_HEIGTH/2)
+                is_lower_than_maximum_icon_height =\
+                    pos[0] <= MENU_BAR_HEIGHT - int(BUTTON_AREA_HEIGTH/2)
+                if is_higher_than_start_icon_height and\
+                        is_lower_than_maximum_icon_height:
                     ''' If it's on an icon height '''
                     icon_choice = int(
                         pos[1]/(BUTTON_AREA_LENGTH))
@@ -239,36 +266,5 @@ while not icon_flags['play']:
                     board.alternate_obstacle_at(coordinate)
     board.show()
 
-
-# Choose which algorithm will run
-coordinates = capture_click_position()
-# Need to associate coordinates and functions dynamically
-# Need to refactor here so it can be better modularized
-# Need to refactor BFS, it's not working somehow
-if coordinates[1] == 1:
-    chosen_algorithm = available_algorithms['AST'][0]
-elif coordinates[1] == 2:
-    chosen_algorithm = available_algorithms['DIJ'][0]
-elif coordinates[1] == 3:
-    chosen_algorithm = available_algorithms['DFS'][0]
-elif coordinates[1] == 4:
-    chosen_algorithm = available_algorithms['BFS'][0]
-
-print(chosen_algorithm)
-
-coordinates = capture_click_position()
-board.set_start(coordinates)
-board.show()
-for _ in range(2):
-    coordinates = capture_click_position()
-    board.add_goal(coordinates)
-    board.show()
-
-# board.set_random_obstacles(0.5)
-board.set_perlin_noise_obstacles(0.3)
-
-
-
-board.show()
 print("Time to find path: ", time() - start_time, " seconds")
 pygame.quit()

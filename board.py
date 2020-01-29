@@ -150,7 +150,7 @@ class Board():
                 self.remove_goal(coordinates)
 
         def remove_goal(self, coordinates: (int, int)) -> None:
-            ''' Remove given goal coordinate from goal nodes 
+            ''' Remove given goal coordinate from goal nodes
                 making it a normal square '''
             removed_goal_index = None
             removed_node = self.get_node_at(coordinates)
@@ -166,6 +166,8 @@ class Board():
         def clear_goals(self) -> None:
             ''' Clear all goals from board making then
                 normal squares. '''
+            if self.goal_nodes is None:
+                return None
             for goal in self.goal_nodes:
                 goal.set_special(False)
                 goal.set_colour(WHITE_COLOUR)
