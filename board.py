@@ -7,20 +7,29 @@ import pygame
 
 # Colours
 WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
-ORANGE_COLOUR = (255, 165, 0)
+RED_COLOUR, ORANGE_COLOUR = (255, 0, 0), (255, 165, 0)
 GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
-CANVAS_DIMENSION = 700
-BOARD_DIMENSION = 30
-SQUARE_SIZE = CANVAS_DIMENSION/BOARD_DIMENSION
+CANVAS_DIMENSION = 600
+BOARD_DIMENSION = 50
+SQUARE_SIZE = int(CANVAS_DIMENSION/BOARD_DIMENSION)
+MENU_BAR_HEIGHT = 100
 NODE_SIZE = SQUARE_SIZE - 1
 OBSTACLES_RATIO = 0.3
+
 
 # Time
 TIME_TICK = 0.01
 
+# Algorithms related constants
+AVAILABLE_ALGORITHMS = [
+    "a_star_pathfind",
+    "dijkstras_pathfinding",
+    "shortest_path_dfs",
+    "shortest_path_bfs",
+]
 
 TNode = TypeVar("TNode", bound="Node")
 
@@ -48,10 +57,8 @@ class Node():
                 pygame.display.get_surface(),
                 self.colour,
                 self.pygame.Rect(
-                    self.x_coordinate*(
-                        SQUARE_SIZE),
-                    self.y_coordinate*(
-                        SQUARE_SIZE),
+                    self.x_coordinate*(SQUARE_SIZE),
+                    MENU_BAR_HEIGHT + self.y_coordinate*(SQUARE_SIZE),
                     NODE_SIZE, NODE_SIZE))
             self.colour_changed = False
 
@@ -75,11 +82,13 @@ class Node():
         self.traversable = not is_obstacle
         if not self.traversable:
             self.set_colour(BLACK_COLOUR)
+        elif not self.special:
+            self.set_colour(WHITE_COLOUR)
 
     def set_special(self, is_special: bool) -> None:
         ''' Set a node as special, it's color
             can't be changed '''
-        self.special = True
+        self.special = is_special
 
 
 class Board():
@@ -89,7 +98,8 @@ class Board():
         def __init__(self, pygame, dimension: int) -> None:
             self.pygame = pygame
             weight, height = dimension, dimension
-            self.end_node = []
+            self.start_node = None
+            self.goal_nodes = []
             self.grid = [
                 [Node(
                     pygame, y, x)
@@ -107,19 +117,66 @@ class Board():
 
         def set_start(self, coordinates: (int, int)) -> None:
             ''' Configure the node at given coordinates
-                as the start node'''
-            self.start_node = self.get_node_at(coordinates)
-            self.start_node.set_colour(POWDERBLUE_COLOUR)
-            self.start_node.set_obstacle(False)
-            self.start_node.set_special(True)
-
-        def set_end(self, coordinates: (int, int)) -> None:
-            ''' Configure the node at given coordinates as the end node '''
+                as the start node. If it's not an already
+                special node.
+                If other node was already the start, the old
+                start node becomes a normal node.'''
             node = self.get_node_at(coordinates)
-            node.set_colour(ORANGE_COLOUR)
-            node.set_obstacle(False)
-            node.set_special(True)
-            self.end_node.append(node)
+            if node.special:
+                return None
+            if not self.start_node:
+                self.start_node = node
+                self.start_node.set_colour(POWDERBLUE_COLOUR)
+                self.start_node.set_special(True)
+                self.start_node.set_obstacle(False)
+            else:
+                self.remove_start_node()
+                self.start_node = node
+                self.start_node.set_colour(POWDERBLUE_COLOUR)
+                self.start_node.set_special(True)
+                self.start_node.set_obstacle(False)
+
+        def remove_start_node(self) -> None:
+            ''' Changes the start node to a normal node again '''
+            if not self.start_node:
+                return None
+            self.start_node.set_special(False)
+            self.start_node.set_colour(WHITE_COLOUR)
+            self.start_node = None
+
+        def add_goal(self, coordinates: (int, int)) -> None:
+            ''' Add the node at given coordinates as an goal node
+            if it's not already an special node(like a start node)'''
+            node = self.get_node_at(coordinates)
+            if not node.special:
+                node.set_colour(ORANGE_COLOUR)
+                node.set_special(True)
+                node.set_obstacle(False)
+                self.goal_nodes.append(node)
+            elif node in self.goal_nodes:
+                self.remove_goal(coordinates)
+
+        def remove_goal(self, coordinates: (int, int)) -> None:
+            ''' Remove given goal coordinate from goal nodes
+                making it a normal square '''
+            removed_goal_index = None
+            removed_node = self.get_node_at(coordinates)
+            for i, goal in enumerate(self.goal_nodes):
+                if removed_node == goal:
+                    goal.set_special(False)
+                    goal.set_colour(WHITE_COLOUR)
+                    removed_goal_index = i
+                    break
+            if removed_goal_index is not None:
+                del self.goal_nodes[removed_goal_index]
+
+        def clear_goals(self) -> None:
+            ''' Clear all goals from board making then
+                normal squares. '''
+            for goal in self.goal_nodes:
+                goal.set_special(False)
+                goal.set_colour(WHITE_COLOUR)
+            self.goal_nodes = []
 
         def add_adjacent_neighbours(self) -> None:
             ''' Add adjacent neighbours to all nodes in grid '''
@@ -168,7 +225,6 @@ class Board():
         def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
             x_length = len(self.grid)
             y_length = len(self.grid[0])
-            base = 0
             for i in range(x_length):
                 for j in range(y_length):
                     if (noise.snoise2(
@@ -187,6 +243,17 @@ class Board():
                 node = None
             return node
 
+        def clear(self) -> None:
+            ''' Clear all the board squares. Like restarting it. '''
+            self.remove_start_node()
+            self.clear_goals()
+
+            for column in self.grid:
+                for node in column:
+                    if not node.traversable:
+                        self.alternate_obstacle_at(node.get_coordinates())
+                    else:
+                        node.set_colour(WHITE_COLOUR)
     instance = None
 
     def __init__(self, pygame, dimension: int) -> None:
@@ -477,11 +544,11 @@ def show_board(open_set, closed_list) -> None:
     board = Board(0, 0)
     for node in open_set:
         if board.start_node != node and\
-                board.end_node != node:
+                node not in board.goal_nodes:
             node.set_colour(GREENYELLOW_COLOUR)
     for node in closed_list:
         if board.start_node != node and\
-                board.end_node != node:
+                node not in board.goal_nodes:
             node.set_colour(DARKSEAGREEN_COLOUR)
 
     board.show()
@@ -514,4 +581,4 @@ def show_path(path_list: List[TNode]) -> None:
         path_node = path_list.pop()
         path_node.set_colour(DARKGREEN_COLOUR)
         board.show()
-        sleep(TIME_TICK*10)
+        sleep(TIME_TICK*5)
