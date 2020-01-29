@@ -85,12 +85,14 @@ def icon_click(
         of the icon choosen and returns the new states. '''
     if icon_choice < 4:
         ''' Pathfinding algorithms buttons '''
-        choosen_algorithm = icon_choice
-        print(choosen_algorithm)
+        erase_border_icon(icon_flags['pathfind'])
+        icon_flags['pathfind'] = icon_choice
+        draw_border_icon(icon_choice)
     elif icon_choice < 7:
         ''' Obstacles algorithms buttons '''
-        choosen_obstacles = icon_choice - 4
-        print(choosen_obstacles)
+        erase_border_icon(icon_flags['obstacles'] + 4)
+        icon_flags['obstacles'] = icon_choice - 4
+        draw_border_icon(icon_choice)
     elif icon_choice < 11:
         if icon_choice == 7:
             print("Setting start")
@@ -140,7 +142,9 @@ available_algorithms = {
 icon_flags = {
     "play": False,
     "start": False,
-    "goal": False
+    "goal": False,
+    "pathfind": 0,
+    "obstacles": 0
 }
 
 start_time = time()
@@ -151,8 +155,6 @@ board = Board(pygame, BOARD_DIMENSION)
 
 board.show()
 
-should_play = setting_start = setting_goal = False
-choosen_algorithm = choosen_obstacles = None
 while not icon_flags['play']:
     # get all events
     ev = pygame.event.get()
