@@ -41,30 +41,6 @@ WAIT_TIME_MILISECONDS = 300
 SURFACE = pygame.display.get_surface()
 
 
-def capture_click_position() -> (int, int):
-    ''' Waits for a click and returns the position
-        on the board that it was make '''
-    clicked = False
-    while(not clicked):
-        # get all events
-        ev = pygame.event.get()
-
-        # proceed events
-        for event in ev:
-            if event.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                pos = pos[::-1]
-                if pos[0] > MENU_BAR_HEIGHT:
-                    coordinates = (
-                        int((pos[0]-MENU_BAR_HEIGHT)/SQUARE_SIZE),
-                        int(pos[1]/SQUARE_SIZE))
-                    clicked = True
-                else:
-                    coordinates = (int(pos[0]/5), int(pos[1]/100))
-                    clicked = True
-    return coordinates
-
-
 def draw_menu_bar(menu_choices) -> None:
     ''' Function draws icons on the menu bar'''
     for i, icon_name in enumerate(IMAGE_ICON_LIST_NAMES):
@@ -181,10 +157,10 @@ def icon_click(
 def draw_icon_border(icon_choice: int) -> None:
     '''Receives the index of the chosen icon
         and draws around it a red rectangle border'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH - 5
-    start_y = int(BUTTON_AREA_HEIGTH/2) - 5
-    x_length = BUTTON_AREA_LENGTH + 5
-    y_length = BUTTON_AREA_HEIGTH + 10
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 2
+    start_y = int(BUTTON_AREA_HEIGTH/2) - 1
+    x_length = BUTTON_AREA_LENGTH - 1
+    y_length = BUTTON_AREA_HEIGTH + 2
     rectangle = [start_x, start_y, x_length, y_length]
     pygame.draw.rect(SURFACE, RED_COLOUR, rectangle, 2)
 
@@ -192,12 +168,13 @@ def draw_icon_border(icon_choice: int) -> None:
 def erase_icon_border(icon_choice: int) -> None:
     ''' Receives the index of one chosen icon
         and erasesthe border around it'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH - 5
-    start_y = int(BUTTON_AREA_HEIGTH/2) - 5
-    x_length = BUTTON_AREA_LENGTH + 5
-    y_length = BUTTON_AREA_HEIGTH + 10
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 2
+    start_y = int(BUTTON_AREA_HEIGTH/2) - 1
+    x_length = BUTTON_AREA_LENGTH - 1
+    y_length = BUTTON_AREA_HEIGTH + 2
     rectangle = [start_x, start_y, x_length, y_length]
     pygame.draw.rect(SURFACE, BLACK_COLOUR, rectangle, 2)
+
 
 icon_flags = {
     "play": False,
