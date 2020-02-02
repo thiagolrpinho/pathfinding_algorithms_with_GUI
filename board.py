@@ -26,9 +26,7 @@ TIME_TICK = 0.01
 # Algorithms related constants
 AVAILABLE_ALGORITHMS = [
     "a_star_pathfind",
-    "dijkstras_pathfinding",
-    "shortest_path_dfs",
-    "shortest_path_bfs",
+    "dijkstras_pathfinding"
 ]
 
 TNode = TypeVar("TNode", bound="Node")
@@ -223,14 +221,14 @@ class Board():
                         node.set_obstacle(True)
 
         def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
+            seed = random.randint(0, 100)
             x_length = len(self.grid)
             y_length = len(self.grid[0])
             for i in range(x_length):
                 for j in range(y_length):
-                    if (noise.snoise2(
-                                i/x_length*3,
-                                j/y_length*3,
-                                1)+1)/2 < percentual_chance:
+                    noise_value = noise.snoise2(
+                        i/x_length*3, j/y_length*3, 1, base=seed)
+                    if (noise_value + 1)/2 < percentual_chance:
                         self.grid[i][j].set_obstacle(True)
 
         def get_node_at(self, coordinate: (int, int)) -> TNode:
@@ -242,6 +240,14 @@ class Board():
             else:
                 node = None
             return node
+
+        def clear_colours(self) -> None:
+            ''' Clear all the normal board squares back to white.
+                Do not affect speacial squares or obstacles'''
+            for column in self.grid:
+                for node in column:
+                    if not node.special and node.traversable:
+                        node.set_colour(WHITE_COLOUR)
 
         def clear(self) -> None:
             ''' Clear all the board squares. Like restarting it. '''
@@ -401,7 +407,7 @@ def dijkstras_search_neighbours(
     return open_set, False
 
 
-def double_dijkstras_pathfinding(start: TNode, goal: TNode) -> bool:
+def double_dijkstras_pathfinding(start: TNode, goal: TNode) -> List[TNode]:
     ''' Like normal dijkstra's algorithm, but searching from both
       start and end at same time. Returns true if found a path
       and goal will have a recursive path till start using
@@ -409,6 +415,7 @@ def double_dijkstras_pathfinding(start: TNode, goal: TNode) -> bool:
     if start == goal:
         goal.parent_node = start
         return True
+    path_found = []
 
     open_sets = [set() for i in range(2)]
     closed_sets = [set() for i in range(2)]
@@ -463,19 +470,20 @@ def double_dijkstras_pathfinding(start: TNode, goal: TNode) -> bool:
 
             previous_node = intersection_node
             while(current_node):
+                print(current_node.get_coordinates())
                 next_node = current_node.parent_node
                 current_node.parent_node = previous_node
                 previous_node = current_node
                 current_node = next_node
-            return True
+            break
+    ''' We then look at the goal or in the start node if any path was found '''
+    current_node = goal if goal.parent_node else start
+    while(current_node):
+        print(current_node.get_coordinates())
+        path_found.append(current_node)
+        next_node = current_node.parent_node
 
-        show_board(
-            open_sets[0].union(open_sets[1]),
-            closed_sets[0].union(closed_sets[1]))
-
-    return False
-    ''' If neither the intersection or the goals weren't reached
-        then no path can be found '''
+    return path_found
 
 
 def shortest_path_dfs(start, goal):
@@ -501,6 +509,7 @@ def depth_first_search(start, goal):
     while stack:
         (vertex, path) = stack.pop()
         for next_node in vertex.neighbours - set(path):
+            print(next_node.get_coordinates())
             if next_node == goal:
                 all_paths.append(path + [next_node])
             elif next_node.traversable:
@@ -514,13 +523,8 @@ def shortest_path_bfs(start, goal):
         Return True if found and the path is available
         inside the nodes '''
     shortest_path = breath_first_search(start, goal)
-    if not shortest_path:
-        return False
-    previous_node = shortest_path[0]
-    for node in shortest_path[1:]:
-        node.parent_node = previous_node
-        previous_node = node
-    return True
+    return shortest_path
+
 
 
 def breath_first_search(start, goal):
@@ -531,6 +535,7 @@ def breath_first_search(start, goal):
     while queue:
         (vertex, path) = queue.pop(0)
         for next in vertex.neighbours - set(path):
+            print(next.get_coordinates())
             if next == goal:
                 return path + [next]
             elif next.traversable:
