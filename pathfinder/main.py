@@ -8,8 +8,7 @@ from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
     SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
     BLACK_COLOUR, RED_COLOUR, AVAILABLE_ALGORITHMS
 from board import Board, a_star_pathfind,\
-    dijkstras_pathfinding, double_dijkstras_pathfinding,\
-    shortest_path_dfs, shortest_path_bfs, show_path
+    dijkstras_pathfinding, show_path
 
 IMAGE_ICON_LIST_NAMES = [
     "1_created_by_roundicons.png", "2_created_by_roundicons.png",
@@ -30,7 +29,7 @@ NUMBER_OF_PATHFIND = 2
 NUMBER_OF_OBSTACLES = 3
 
 # PATHS
-ICONS_FOLDER_PATH = "assets/icons/"
+ICONS_FOLDER_PATH = "pathfinder/assets/icons/"
 
 # PYGAME RELATED GLOBALS CONSTANT
 pygame.init()
@@ -159,7 +158,7 @@ def icon_click(
 def draw_icon_border(icon_choice: int) -> None:
     '''Receives the index of the chosen icon
         and draws around it a red rectangle border'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH - 2
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 1
     start_y = int(BUTTON_AREA_HEIGTH/2) - 1
     x_length = BUTTON_AREA_LENGTH - 1
     y_length = BUTTON_AREA_HEIGTH + 2
@@ -170,7 +169,7 @@ def draw_icon_border(icon_choice: int) -> None:
 def erase_icon_border(icon_choice: int) -> None:
     ''' Receives the index of one chosen icon
         and erasesthe border around it'''
-    start_x = icon_choice*BUTTON_AREA_LENGTH - 2
+    start_x = icon_choice*BUTTON_AREA_LENGTH - 1
     start_y = int(BUTTON_AREA_HEIGTH/2) - 1
     x_length = BUTTON_AREA_LENGTH - 1
     y_length = BUTTON_AREA_HEIGTH + 2
