@@ -44,3 +44,5 @@ multiple goals. Their order will be the same as the one they're created.To creat
 5. The **play icon** start the game if the board has at least one start and one goal. While the algorithm is running it's not possible to change modes or to click other buttons. After each run the board will be clean.
 6. The **restart icon** returns the board the initial blank state.
 7. The **power icon** is used to close the application.
+
+*The icons used in this projected were not created by me. They're openly available on [FlatIcon](https://www.flaticon.com/home). The name of creators of each icon is listed on it's filename.*
