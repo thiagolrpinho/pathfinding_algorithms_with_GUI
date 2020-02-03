@@ -12,7 +12,9 @@ The last version has the following implemented algorithms:
 
 ## How to run it
 
-### First install the dependencies used
+First clone this repository. Then inside the cloned folder follow the steps bellow:
+
+### Install the dependencies used
 
 ```bash
 pip3 install -r requirements.txt
