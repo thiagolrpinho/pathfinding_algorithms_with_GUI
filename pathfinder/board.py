@@ -12,7 +12,7 @@ GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
 
 # Sizes and Dimensions
-CANVAS_DIMENSION = 600
+CANVAS_DIMENSION = 500
 BOARD_DIMENSION = 50
 SQUARE_SIZE = int(CANVAS_DIMENSION/BOARD_DIMENSION)
 MENU_BAR_HEIGHT = 100
@@ -26,9 +26,7 @@ TIME_TICK = 0.01
 # Algorithms related constants
 AVAILABLE_ALGORITHMS = [
     "a_star_pathfind",
-    "dijkstras_pathfinding",
-    "shortest_path_dfs",
-    "shortest_path_bfs",
+    "dijkstras_pathfinding"
 ]
 
 TNode = TypeVar("TNode", bound="Node")
@@ -223,14 +221,14 @@ class Board():
                         node.set_obstacle(True)
 
         def set_perlin_noise_obstacles(self, percentual_chance: int) -> None:
+            seed = random.randint(0, 100)
             x_length = len(self.grid)
             y_length = len(self.grid[0])
             for i in range(x_length):
                 for j in range(y_length):
-                    if (noise.snoise2(
-                                i/x_length*3,
-                                j/y_length*3,
-                                1)+1)/2 < percentual_chance:
+                    noise_value = noise.snoise2(
+                        i/x_length*3, j/y_length*3, 1, base=seed)
+                    if (noise_value + 1)/2 < percentual_chance:
                         self.grid[i][j].set_obstacle(True)
 
         def get_node_at(self, coordinate: (int, int)) -> TNode:
@@ -242,6 +240,14 @@ class Board():
             else:
                 node = None
             return node
+
+        def clear_colours(self) -> None:
+            ''' Clear all the normal board squares back to white.
+                Do not affect speacial squares or obstacles'''
+            for column in self.grid:
+                for node in column:
+                    if not node.special and node.traversable:
+                        node.set_colour(WHITE_COLOUR)
 
         def clear(self) -> None:
             ''' Clear all the board squares. Like restarting it. '''
@@ -399,144 +405,6 @@ def dijkstras_search_neighbours(
         neighbour.f = neighbour.g
         open_set.add(neighbour)
     return open_set, False
-
-
-def double_dijkstras_pathfinding(start: TNode, goal: TNode) -> bool:
-    ''' Like normal dijkstra's algorithm, but searching from both
-      start and end at same time. Returns true if found a path
-      and goal will have a recursive path till start using
-      parent_node attribute '''
-    if start == goal:
-        goal.parent_node = start
-        return True
-
-    open_sets = [set() for i in range(2)]
-    closed_sets = [set() for i in range(2)]
-
-    open_sets[0].add(start)
-    open_sets[1].add(goal)
-    while(open_sets[0] and open_sets[1]):
-        ''' while any of the open lists are not empty find the nodes
-            with the least f on the  each open list, call it "q"'''
-        q_nodes = []
-        for i in range(2):
-            q_nodes.append(min(open_sets[i], key=lambda x: x.f))
-            open_sets[i].remove(q_nodes[i])
-        ''' pop each q off each open list '''
-
-        open_sets[0], found = dijkstras_search_neighbours(
-            q_nodes[0], goal, open_sets[0], closed_sets[0])
-        if found:
-            return True
-        open_sets[1], found = dijkstras_search_neighbours(
-            q_nodes[1], start, open_sets[1], closed_sets[1])
-        ''' Search neighbours for both end and starting nodes'''
-        if found:
-            current_node = start
-            previous_node = None
-            while(current_node):
-                next_node = current_node.parent_node
-                current_node.parent_node = previous_node
-                previous_node = current_node
-                current_node = next_node
-            return True
-
-        for i in range(2):
-            closed_sets[i].add(q_nodes[i])
-
-        if bool(open_sets[0].intersection(open_sets[1])):
-            ''' If there's a node that's in both open sets then
-                a path was found. Now we need to connect then '''
-            intersection_node = min(
-                open_sets[0].intersection(open_sets[1]), key=lambda x: x.f)
-
-            if intersection_node.parent_node == q_nodes[0]:
-                closest_neighbour = min(
-                    closed_sets[1].intersection(intersection_node.neighbours),
-                    key=lambda x: x.f)
-                current_node = closest_neighbour
-            else:
-                closest_neighbour = min(
-                    closed_sets[0].intersection(intersection_node.neighbours),
-                    key=lambda x: x.f)
-                current_node = closest_neighbour
-
-            previous_node = intersection_node
-            while(current_node):
-                next_node = current_node.parent_node
-                current_node.parent_node = previous_node
-                previous_node = current_node
-                current_node = next_node
-            return True
-
-        show_board(
-            open_sets[0].union(open_sets[1]),
-            closed_sets[0].union(closed_sets[1]))
-
-    return False
-    ''' If neither the intersection or the goals weren't reached
-        then no path can be found '''
-
-
-def shortest_path_dfs(start, goal):
-    ''' Finds the shortest path among all possible paths
-        available in the graph. Return True if found
-        and the path is available inside the nodes '''
-    all_possible_paths = depth_first_search(start, goal)
-    if not all_possible_paths:
-        return False
-    shortest_path = min(all_possible_paths, key=lambda x: len(x))
-    previous_node = shortest_path[0]
-    for node in shortest_path[1:]:
-        node.parent_node = previous_node
-        previous_node = node
-    return True
-
-
-def depth_first_search(start, goal):
-    ''' Search all paths in the graph looking
-        between start and goal using depth first'''
-    stack = [(start, [start])]
-    all_paths = []
-    while stack:
-        (vertex, path) = stack.pop()
-        for next_node in vertex.neighbours - set(path):
-            if next_node == goal:
-                all_paths.append(path + [next_node])
-            elif next_node.traversable:
-                stack.append((next_node, path + [next_node]))
-        show_board(set(path), set())
-    return all_paths
-
-
-def shortest_path_bfs(start, goal):
-    ''' Finds the shortest path using breath_first_search.
-        Return True if found and the path is available
-        inside the nodes '''
-    shortest_path = breath_first_search(start, goal)
-    if not shortest_path:
-        return False
-    previous_node = shortest_path[0]
-    for node in shortest_path[1:]:
-        node.parent_node = previous_node
-        previous_node = node
-    return True
-
-
-def breath_first_search(start, goal):
-    ''' BFS also searches for all paths
-        but as first found is the shortest
-        returns the first one'''
-    queue = [(start, [start])]
-    while queue:
-        (vertex, path) = queue.pop(0)
-        for next in vertex.neighbours - set(path):
-            if next == goal:
-                return path + [next]
-            elif next.traversable:
-                queue.append((next, path + [next]))
-        show_board(set(path), set())
-    return None
 
 
 def show_board(open_set, closed_list) -> None:
