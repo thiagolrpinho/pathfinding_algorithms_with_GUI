@@ -1,2 +1,2 @@
 noise==1.2.2
-pygame==1.9.6
+pygame>=1.9.6

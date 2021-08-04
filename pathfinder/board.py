@@ -1,6 +1,6 @@
 import random
 from time import sleep
-from typing import List, TypeVar
+from typing import List, TypeVar, Tuple
 
 import noise
 import pygame
@@ -26,7 +26,8 @@ TIME_TICK = 0.01
 # Algorithms related constants
 AVAILABLE_ALGORITHMS = [
     "a_star_pathfind",
-    "dijkstras_pathfinding"
+    "dijkstras_pathfinding",
+    "pai_careca"
 ]
 
 TNode = TypeVar("TNode", bound="Node")
@@ -60,17 +61,17 @@ class Node():
                     NODE_SIZE, NODE_SIZE))
             self.colour_changed = False
 
-    def set_colour(self, new_colour: (int, int, int)) -> None:
+    def set_colour(self, new_colour: Tuple[int, int, int]) -> None:
         ''' Changes the node colour and signalizes it's
             colour has changed '''
         if not self.special:
             self.colour_changed = True
             self.colour = new_colour
 
-    def get_coordinates(self) -> (int, int):
+    def get_coordinates(self) -> Tuple[int, int]:
         return (self.y_coordinate, self.x_coordinate)
 
-    def add_neighbour(self, neighbour_node: (int, int)) -> None:
+    def add_neighbour(self, neighbour_node: Tuple[int, int]) -> None:
         self.neighbours.add(neighbour_node)
 
     def add_parent(self, parent_node: TNode) -> None:
@@ -113,7 +114,7 @@ class Board():
                     node.show()
             pygame.display.update()
 
-        def set_start(self, coordinates: (int, int)) -> None:
+        def set_start(self, coordinates: Tuple[int, int]) -> None:
             ''' Configure the node at given coordinates
                 as the start node. If it's not an already
                 special node.
@@ -142,7 +143,7 @@ class Board():
             self.start_node.set_colour(WHITE_COLOUR)
             self.start_node = None
 
-        def add_goal(self, coordinates: (int, int)) -> None:
+        def add_goal(self, coordinates: Tuple[int, int]) -> None:
             ''' Add the node at given coordinates as an goal node
             if it's not already an special node(like a start node)'''
             node = self.get_node_at(coordinates)
@@ -154,7 +155,7 @@ class Board():
             elif node in self.goal_nodes:
                 self.remove_goal(coordinates)
 
-        def remove_goal(self, coordinates: (int, int)) -> None:
+        def remove_goal(self, coordinates: Tuple[int, int]) -> None:
             ''' Remove given goal coordinate from goal nodes
                 making it a normal square '''
             removed_goal_index = None
@@ -202,12 +203,13 @@ class Board():
                                 possible_adjacent)
                             node.add_neighbour(neighbour_node)
 
-        def is_valid_coordinate(self, possible_coordinate: (int, int)) -> bool:
+        def is_valid_coordinate(
+                self, possible_coordinate: Tuple[int, int]) -> bool:
             return sum(map(
                         lambda x: x < 0 or x >= BOARD_DIMENSION,
                         possible_coordinate)) == 0
 
-        def alternate_obstacle_at(self, coordinate: (int, int)) -> None:
+        def alternate_obstacle_at(self, coordinate: Tuple[int, int]) -> None:
             node = self.get_node_at(coordinate)
             if node.traversable:
                 node.set_obstacle(True)
@@ -231,7 +233,7 @@ class Board():
                     if (noise_value + 1)/2 < percentual_chance:
                         self.grid[i][j].set_obstacle(True)
 
-        def get_node_at(self, coordinate: (int, int)) -> TNode:
+        def get_node_at(self, coordinate: Tuple[int, int]) -> TNode:
             ''' Returns the node available at given
                 coordinate if it exists'''
             node = None
@@ -272,8 +274,8 @@ class Board():
 
 
 def euclidean_distance(
-        start_coordinate: (int, int),
-        goal_coordinate: (int, int)) -> float:
+        start_coordinate: Tuple[int, int],
+        goal_coordinate: Tuple[int, int]) -> float:
     ''' Receives two coordinates (y, x) and return their distance using
     euclidean distance'''
     return (
@@ -282,8 +284,8 @@ def euclidean_distance(
 
 
 def manhattan_distance(
-        start_coordinate: (int, int),
-        goal_coordinate: (int, int)) -> int:
+        start_coordinate: Tuple[int, int],
+        goal_coordinate: Tuple[int, int]) -> int:
     ''' Receives two coordinates (y, x) and return their manhattan
     distance '''
     return abs(goal_coordinate[0] - start_coordinate[0])\
