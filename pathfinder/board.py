@@ -4,6 +4,8 @@ from typing import List, TypeVar, Tuple
 
 import noise
 import pygame
+import numpy
+from graph_tool.all import Graph
 
 # Colours
 WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
@@ -26,11 +28,12 @@ TIME_TICK = 0.01
 # Algorithms related constants
 AVAILABLE_ALGORITHMS = [
     "a_star_pathfind",
+    "monte_carlo_pathfind",
     "dijkstras_pathfinding",
-    "pai_careca"
 ]
 
 TNode = TypeVar("TNode", bound="Node")
+TTreeNode = TypeVar("TTreeNode", bound="TreeNode")
 
 
 class Node():
@@ -45,6 +48,8 @@ class Node():
         self.special = False
         self.x_coordinate, self.y_coordinate = x_coordinate, y_coordinate
         self.g, self.h, self.f = 1, 1, 1
+        self.t, self.n, self.child_nodes_num_monte_carlo = 0, 0, 0
+        self.parent_monte_carlo = None
         self.set_colour(WHITE_COLOUR)
         self.traversable = True
 
@@ -299,6 +304,79 @@ def distance_between(
     euclidean distance'''
     return euclidean_distance(
         first_node.get_coordinates(), second_node.get_coordinates())
+
+
+def upper_confidence_bound(node: TNode) -> float:
+    if node.n == 0:
+        return float('inf')
+    return node.t + 2*(numpy.log(node.parent_monte_carlo.n)/node.n) ** (1/2)
+
+
+def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
+    ''' Following Ankit Choudhary instructions available in analyticsvidhya
+        Selection
+            Selecting good child nodes, starting from the root node R,
+            that represent states leading to better overall outcome (win).
+        Expansion
+            If L is a not a terminal node (i.e. it does not end the game), then create one or more child nodes and select one (C).
+        Simulation (rollout)
+            Run a simulated playout from C until a result is achieved.
+        Backpropagation
+            Update the current move sequence with the simulation result.
+    '''
+    open_set = set()
+    closed_set = set()
+    start.parent_node = None
+    open_set.add(start)
+    while(open_set):
+        r_node = max(open_set, key=upper_confidence_bound)
+        open_set.remove(r_node)
+        open_set, found = monte_carlo_search_neighbours(
+            r_node, goal, open_set, closed_set)
+        if found:
+            path = extract_path(goal)
+            return path
+        closed_set.add(r_node)
+    return []
+
+
+def monte_carlo_search_neighbours(
+        q_node, goal, open_set, closed_set):
+    '''  Selection
+            Selecting good child nodes, starting from the root node R,
+            that represent states leading to better overall outcome (win). '''
+
+    for neighbour in q_node.neighbours:
+        ''' Expansion
+            If L is a not a terminal node (i.e. it does not end the game),
+            then create one or more child nodes and select one (C). '''
+        if neighbour.get_coordinates() == goal.get_coordinates():
+            ''' if successor is the goal, stop search '''
+            neighbour.add_parent(q_node)
+            return open_set, True
+
+        if neighbour in closed_set or not neighbour.traversable:
+            continue
+
+        if neighbour.n == 0:
+            ''' Simulation (rollout)
+            Run a simulated playout from C until a result is achieved. '''
+            neighbour.t = manhattan_distance(
+                neighbour.get_coordinates(), goal.get_coordinates())
+            neighbour.n = 1
+            neighbour.parent_monte_carlo = q_node
+            q_node.child_nodes_num_monte_carlo += 1
+
+            ''' Backpropagation
+            Update the current move sequence with the simulation result. '''
+            not_updated_parent = neighbour.parent_monte_carlo
+            while(not_updated_parent):
+                not_updated_parent.t += neighbour.t
+                not_updated_parent.n += 1
+                not_updated_parent = not_updated_parent.parent_monte_carlo
+            open_set.add(neighbour)
+    show_board(open_set, closed_set)
+    return open_set, False
 
 
 def a_star_pathfind(start: TNode, goal: TNode) -> List[TNode]:

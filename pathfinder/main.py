@@ -8,7 +8,7 @@ from board import CANVAS_DIMENSION, BOARD_DIMENSION,\
     SQUARE_SIZE, OBSTACLES_RATIO, MENU_BAR_HEIGHT,\
     BLACK_COLOUR, RED_COLOUR, AVAILABLE_ALGORITHMS
 from board import Board, a_star_pathfind,\
-    dijkstras_pathfinding, show_path
+    dijkstras_pathfinding, monte_carlo_pathfind, show_path
 
 IMAGE_ICON_LIST_NAMES = [
     "1_created_by_roundicons.png", "2_created_by_roundicons.png",
