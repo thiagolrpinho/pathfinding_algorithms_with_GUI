@@ -361,10 +361,11 @@ def monte_carlo_search_neighbours(
         if neighbour.n == 0:
             ''' Simulation (rollout)
             Run a simulated playout from C until a result is achieved. '''
-            neighbour.t = manhattan_distance(
+            neighbour.t = 1/manhattan_distance(
                 neighbour.get_coordinates(), goal.get_coordinates())
             neighbour.n = 1
             neighbour.parent_monte_carlo = q_node
+            neighbour.add_parent(q_node)
             q_node.child_nodes_num_monte_carlo += 1
 
             ''' Backpropagation
