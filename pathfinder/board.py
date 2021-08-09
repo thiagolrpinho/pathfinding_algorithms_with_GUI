@@ -33,7 +33,6 @@ AVAILABLE_ALGORITHMS = [
 ]
 
 TNode = TypeVar("TNode", bound="Node")
-TTreeNode = TypeVar("TTreeNode", bound="TreeNode")
 
 
 class Node():
@@ -309,7 +308,8 @@ def distance_between(
 def upper_confidence_bound(node: TNode) -> float:
     if node.n == 0:
         return float('inf')
-    return node.t + 2*(numpy.log(node.parent_monte_carlo.n)/node.n) ** (1/2)
+    return node.t/node.n + 2*(
+        numpy.log(node.parent_node.n)/node.n) ** (1/2)
 
 
 def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
@@ -329,7 +329,10 @@ def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
     start.parent_node = None
     open_set.add(start)
     while(open_set):
-        r_node = max(open_set, key=upper_confidence_bound)
+        try:
+            r_node = max(open_set, key=upper_confidence_bound)
+        except AttributeError as e:
+            print(open_set)
         open_set.remove(r_node)
         open_set, found = monte_carlo_search_neighbours(
             r_node, goal, open_set, closed_set)
@@ -341,41 +344,57 @@ def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
 
 
 def monte_carlo_search_neighbours(
-        q_node, goal, open_set, closed_set):
+        root_node, goal, open_set, closed_set):
     '''  Selection
             Selecting good child nodes, starting from the root node R,
             that represent states leading to better overall outcome (win). '''
-
-    for neighbour in q_node.neighbours:
+    print("Nó raiz:", root_node.get_coordinates())
+    for i, neighbour in enumerate(root_node.neighbours):
         ''' Expansion
             If L is a not a terminal node (i.e. it does not end the game),
             then create one or more child nodes and select one (C). '''
-        if neighbour.get_coordinates() == goal.get_coordinates():
-            ''' if successor is the goal, stop search '''
-            neighbour.add_parent(q_node)
-            return open_set, True
-
+        print("Vizinho: ", i, " ", neighbour.get_coordinates())
         if neighbour in closed_set or not neighbour.traversable:
             continue
+
+        if neighbour.get_coordinates() == goal.get_coordinates():
+            ''' if successor is the goal, stop search '''
+            neighbour.add_parent(root_node)
+            return open_set, True
 
         if neighbour.n == 0:
             ''' Simulation (rollout)
             Run a simulated playout from C until a result is achieved. '''
             neighbour.t = 1/manhattan_distance(
-                neighbour.get_coordinates(), goal.get_coordinates())
+                neighbour.get_coordinates(), goal.get_coordinates()) * 10
             neighbour.n = 1
-            neighbour.parent_monte_carlo = q_node
-            neighbour.add_parent(q_node)
-            q_node.child_nodes_num_monte_carlo += 1
+            neighbour.add_parent(root_node)
+            root_node.child_nodes_num_monte_carlo += 1
+            print("Atualizando nó filho: ", neighbour.get_coordinates())
+            print(
+                    "Valor do filho: ", neighbour.t, neighbour.n)
 
             ''' Backpropagation
             Update the current move sequence with the simulation result. '''
-            not_updated_parent = neighbour.parent_monte_carlo
+            not_updated_parent = neighbour.parent_node
             while(not_updated_parent):
+                print(
+                    "Backpropagation nó pai: ",
+                    not_updated_parent.get_coordinates())
                 not_updated_parent.t += neighbour.t
                 not_updated_parent.n += 1
-                not_updated_parent = not_updated_parent.parent_monte_carlo
+                print(
+                    "Valor do pai: ",
+                    not_updated_parent.t, not_updated_parent.n)
+                not_updated_parent = not_updated_parent.parent_node
             open_set.add(neighbour)
+            print("UCB filho: ", upper_confidence_bound(neighbour))
+            print()
+        elif neighbour not in open_set:
+            print("Xablau: ", neighbour.get_coordinates())
+            print(neighbour.__dict__)
+            open_set.add(neighbour)
+
     show_board(open_set, closed_set)
     return open_set, False
 
@@ -491,6 +510,7 @@ def dijkstras_search_neighbours(
 def show_board(open_set, closed_list) -> None:
     ''' Show the board if there's already a board created '''
     board = Board(0, 0)
+
     for node in open_set:
         if board.start_node != node and\
                 node not in board.goal_nodes:
