@@ -23,7 +23,7 @@ OBSTACLES_RATIO = 0.3
 
 
 # Time
-TIME_TICK = 0.01
+TIME_TICK = 0.05
 
 # Algorithms related constants
 AVAILABLE_ALGORITHMS = [
@@ -100,6 +100,7 @@ class Board():
     class __Board():
         def __init__(self, pygame, dimension: int) -> None:
             self.pygame = pygame
+            self.dimension = dimension
             weight, height = dimension, dimension
             self.start_node = None
             self.goal_nodes = []
@@ -259,13 +260,15 @@ class Board():
             ''' Clear all the board squares. Like restarting it. '''
             self.remove_start_node()
             self.clear_goals()
+            weight = height = self.dimension
+            self.grid = [
+                [Node(
+                    pygame, y, x)
+                    for x in range(weight)]
+                for y in range(height)]
+            self.add_adjacent_neighbours()
+            self.add_diagonal_neighbours()
 
-            for column in self.grid:
-                for node in column:
-                    if not node.traversable:
-                        self.alternate_obstacle_at(node.get_coordinates())
-                    else:
-                        node.set_colour(WHITE_COLOUR)
     instance = None
 
     def __init__(self, pygame, dimension: int) -> None:
@@ -308,8 +311,13 @@ def distance_between(
 def upper_confidence_bound(node: TNode) -> float:
     if node.n == 0:
         return float('inf')
-    return node.t/node.n + 2*(
-        numpy.log(node.parent_node.n)/node.n) ** (1/2)
+    if node.parent_node is None:
+        parent_children_count = 0
+    else:
+        parent_children_count = node.parent_node.n
+    ucb1 = node.t/node.n + 2*(
+        numpy.log(parent_children_count)/node.n) ** (1/2)
+    return ucb1
 
 
 def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
@@ -333,6 +341,7 @@ def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
             r_node = max(open_set, key=upper_confidence_bound)
         except AttributeError as e:
             print(open_set)
+            exit(1)
         open_set.remove(r_node)
         open_set, found = monte_carlo_search_neighbours(
             r_node, goal, open_set, closed_set)
@@ -373,7 +382,7 @@ def monte_carlo_search_neighbours(
             print("Atualizando nó filho: ", neighbour.get_coordinates())
             print(
                     "Valor do filho: ", neighbour.t, neighbour.n)
-
+            print("UCB filho: ", upper_confidence_bound(neighbour))
             ''' Backpropagation
             Update the current move sequence with the simulation result. '''
             not_updated_parent = neighbour.parent_node
@@ -388,11 +397,13 @@ def monte_carlo_search_neighbours(
                     not_updated_parent.t, not_updated_parent.n)
                 not_updated_parent = not_updated_parent.parent_node
             open_set.add(neighbour)
-            print("UCB filho: ", upper_confidence_bound(neighbour))
             print()
         elif neighbour not in open_set:
             print("Xablau: ", neighbour.get_coordinates())
             print(neighbour.__dict__)
+            print(open_set)
+            print(closed_set)
+            input()
             open_set.add(neighbour)
 
     show_board(open_set, closed_set)
