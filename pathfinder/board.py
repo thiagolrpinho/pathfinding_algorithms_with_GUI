@@ -2,6 +2,7 @@ import random
 from time import sleep
 from typing import List, TypeVar, Tuple
 
+import random
 import noise
 import pygame
 import numpy
@@ -12,6 +13,7 @@ WHITE_COLOUR, BLACK_COLOUR = (255, 255, 255), (0, 0, 0)
 RED_COLOUR, ORANGE_COLOUR = (255, 0, 0), (255, 165, 0)
 GREENYELLOW_COLOUR, POWDERBLUE_COLOUR = (173, 255, 47), (176, 224, 230)
 DARKSEAGREEN_COLOUR, DARKGREEN_COLOUR = (143, 188, 143), (0,  100, 0)
+PURPLE_COLOUR = (130, 46, 255)
 
 # Sizes and Dimensions
 CANVAS_DIMENSION = 500
@@ -320,6 +322,57 @@ def upper_confidence_bound(node: TNode) -> float:
     return ucb1
 
 
+def draw_board_simulation(simulated_paths: List[List[TNode]]) -> None:
+    ''' Show the board if there's already a board created '''
+    board = Board(0, 0)
+
+    for path in simulated_paths:
+        for node in path:
+            if board.start_node != node and\
+                    node not in board.goal_nodes:
+                node.set_colour(PURPLE_COLOUR)
+        board.show()
+    sleep(TIME_TICK)
+
+
+def simulation(initial_node: TNode, goal_node: TNode) -> float:
+    simulated_paths = []
+    summation_value = 0
+    simulations_count = 0
+    for neighbour_node in initial_node.neighbours:
+        ''' Starting simulated clone paths'''
+        if not neighbour_node.traversable:
+            continue
+        else:
+            simulations_count += 1
+
+        simulated_path = [neighbour_node]
+        choosen_node = neighbour_node
+        for i in range(10):
+            ''' For each path, expand the path randomized'''
+            valid_nodes = [
+                node for node in choosen_node.neighbours
+                if node.n == 0 and node.traversable
+                and node not in simulated_path]
+            valid_nodes_count = len(valid_nodes)
+            if valid_nodes_count == 0:
+                break
+            random_index = random.randint(0, valid_nodes_count-1)
+            choosen_node = valid_nodes[random_index]
+            if choosen_node == goal_node:
+                return float('inf')
+            simulated_path.append(choosen_node)
+
+        last_simulated_node = simulated_path[-1]
+        summation_value = 1/manhattan_distance(
+                last_simulated_node.get_coordinates(),
+                goal_node.get_coordinates()) * 10
+        simulated_paths.append(simulated_path)
+    draw_board_simulation(simulated_paths)
+    average_value = summation_value/simulations_count
+    return average_value
+
+
 def monte_carlo_pathfind(start: TNode, goal: TNode) -> List[TNode]:
     ''' Following Ankit Choudhary instructions available in analyticsvidhya
         Selection
@@ -374,8 +427,8 @@ def monte_carlo_search_neighbours(
         if neighbour.n == 0:
             ''' Simulation (rollout)
             Run a simulated playout from C until a result is achieved. '''
-            neighbour.t = 1/manhattan_distance(
-                neighbour.get_coordinates(), goal.get_coordinates()) * 10
+            
+            neighbour.t = simulation(neighbour, goal)
             neighbour.n = 1
             neighbour.add_parent(root_node)
             root_node.child_nodes_num_monte_carlo += 1
