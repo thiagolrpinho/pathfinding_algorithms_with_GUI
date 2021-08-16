@@ -1,6 +1,6 @@
 import random
 from time import sleep
-from typing import List, TypeVar, Tuple
+from typing import List, Set, TypeVar, Tuple
 
 import random
 import noise
@@ -332,16 +332,30 @@ def draw_board_simulation(simulated_paths: List[List[TNode]]) -> None:
                     node not in board.goal_nodes:
                 node.set_colour(PURPLE_COLOUR)
         board.show()
-    sleep(TIME_TICK)
+        sleep(TIME_TICK)
 
 
-def simulation(initial_node: TNode, goal_node: TNode) -> float:
+def clear_board_simulation(simulated_paths: List[List[TNode]]) -> None:
+    ''' Show the board if there's already a board created '''
+    board = Board(0, 0)
+
+    for path in simulated_paths:
+        for node in path:
+            if board.start_node != node and\
+                    node not in board.goal_nodes:
+                node.set_colour(WHITE_COLOUR)
+        board.show()
+
+
+def simulation(
+        initial_node: TNode, goal_node: TNode) -> float:
     simulated_paths = []
     summation_value = 0
     simulations_count = 0
+
     for neighbour_node in initial_node.neighbours:
         ''' Starting simulated clone paths'''
-        if not neighbour_node.traversable:
+        if not neighbour_node.traversable or neighbour_node.n != 0:
             continue
         else:
             simulations_count += 1
@@ -364,12 +378,17 @@ def simulation(initial_node: TNode, goal_node: TNode) -> float:
             simulated_path.append(choosen_node)
 
         last_simulated_node = simulated_path[-1]
-        summation_value = 1/manhattan_distance(
+        distance_to_object_simulated_value = 1/manhattan_distance(
                 last_simulated_node.get_coordinates(),
-                goal_node.get_coordinates()) * 10
+                goal_node.get_coordinates()) * 100
+        summation_value = distance_to_object_simulated_value
         simulated_paths.append(simulated_path)
     draw_board_simulation(simulated_paths)
-    average_value = summation_value/simulations_count
+    clear_board_simulation(simulated_paths)
+    if simulations_count == 0:
+        average_value = 0
+    else:
+        average_value = summation_value/simulations_count
     return average_value
 
 
